@@ -3,65 +3,136 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Marketing Planner（年度行銷日曆）</title>
+  <title>行銷廣告專案計劃表</title>
   <link rel="stylesheet" href="./style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <header class="topbar">
-    <div>
-      <h1>Marketing Planner</h1>
-      <p class="sub">第一層：年度行銷日曆（點月份進去看 W1~W4 節奏與活動）</p>
-    </div>
-    <div class="badge">Supabase</div>
+    <h1 class="title">行銷廣告專案計劃表</h1>
+    <button id="btnOpenNewProject" class="pill pill-white">新增專案按鈕</button>
   </header>
 
-  <main class="container">
-    <section class="card">
-      <h2>新增月份計畫</h2>
-      <div class="grid-3">
-        <label>
-          <span>月份（YYYY-MM）</span>
-          <input id="yearMonth" placeholder="例如 2026-03" />
-        </label>
-
-        <label>
-          <span>主題（Theme）</span>
-          <input id="theme" placeholder="例如 春天 / 沙灘 / 中秋" />
-        </label>
-
-        <label>
-          <span>備註</span>
-          <input id="notes" placeholder="可留空" />
-        </label>
+  <main class="page">
+    <section class="toolbar">
+      <div class="pill pill-dark" id="yearPill">
+        年度篩選器
       </div>
 
-      <div class="row">
-        <button id="btnCreateMonth" class="primary">新增月份</button>
-        <span id="msg" class="msg"></span>
+      <div id="yearDropdown" class="dropdown hidden">
+        <div class="dropdown-item" data-year="ALL">全部年度</div>
+        <div id="yearOptions"></div>
       </div>
     </section>
 
-    <section class="card">
-      <div class="row space-between">
-        <h2>月份列表</h2>
-        <button id="btnRefresh" class="ghost">重新整理</button>
-      </div>
-      <div id="monthsList" class="list"></div>
-    </section>
-
-    <section class="card">
-      <h2>小提醒</h2>
-      <ul class="tips">
-        <li>點月份卡片會進入第二層頁面（W1~W4、活動、變更紀錄）。</li>
-        <li>如果你之後想新增「平台/品項/主題」的代碼規則，我可以幫你把命名自動產生。</li>
-      </ul>
-    </section>
+    <section id="grid" class="grid"></section>
   </main>
+
+  <!-- 新增專案 Modal -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div class="modal-title">新增專案</div>
+        <button id="btnCloseModal" class="pill">關閉</button>
+      </div>
+
+      <div class="form">
+        <label>
+          <div class="label">年度</div>
+          <input id="pYear" type="number" placeholder="例如 2026" />
+        </label>
+
+        <label>
+          <div class="label">專案名稱（卡片大字）</div>
+          <input id="pTitle" placeholder="例如：春天｜電池更換｜訊息主力" />
+        </label>
+
+        <div class="form-row">
+          <label>
+            <div class="label">主打品項</div>
+            <select id="pProduct">
+              <option value="電池更換">電池更換</option>
+              <option value="螢幕更換">螢幕更換</option>
+              <option value="主機板維修">主機板維修</option>
+              <option value="資料救援">資料救援</option>
+              <option value="Switch維修">Switch維修</option>
+            </select>
+          </label>
+
+          <label>
+            <div class="label">主題</div>
+            <input id="pTheme" placeholder="春天 / 沙灘 / 中秋" />
+          </label>
+        </div>
+
+        <div class="form-row">
+          <label>
+            <div class="label">平台</div>
+            <select id="pPlatforms">
+              <option value="META">META</option>
+              <option value="GOOGLE">GOOGLE</option>
+              <option value="META,GOOGLE">META + GOOGLE</option>
+            </select>
+          </label>
+
+          <label>
+            <div class="label">門市</div>
+            <select id="pStore">
+              <option value="勤美">勤美</option>
+              <option value="沙鹿">沙鹿</option>
+              <option value="勤美/沙鹿">勤美/沙鹿</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="form-row">
+          <label>
+            <div class="label">目標</div>
+            <select id="pObjective">
+              <option value="MSG">MSG（訊息）</option>
+              <option value="LEAD">LEAD（表單）</option>
+              <option value="CALL">CALL（來電）</option>
+            </select>
+          </label>
+
+          <label>
+            <div class="label">狀態</div>
+            <select id="pStatus">
+              <option value="規劃中">規劃中</option>
+              <option value="投放中">投放中</option>
+              <option value="結案">結案</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="form-row">
+          <label>
+            <div class="label">開始日</div>
+            <input id="pStart" type="date" />
+          </label>
+
+          <label>
+            <div class="label">結束日</div>
+            <input id="pEnd" type="date" />
+          </label>
+        </div>
+
+        <label>
+          <div class="label">備註</div>
+          <input id="pNotes" placeholder="可留空" />
+        </label>
+
+        <div class="actions">
+          <button id="btnCreateProject" class="pill pill-primary">建立專案</button>
+          <div id="msg" class="msg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src="./app.js"></script>
   <script>
-    Planner.initIndex();
+    Planner.initProjectsIndex();
   </script>
 </body>
 </html>
