@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Marketing Planner（年度行銷日曆）</title>
+  <link rel="stylesheet" href="./style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>Marketing Planner</h1>
+      <p class="sub">第一層：年度行銷日曆（點月份進去看 W1~W4 節奏與活動）</p>
+    </div>
+    <div class="badge">Supabase</div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>新增月份計畫</h2>
+      <div class="grid-3">
+        <label>
+          <span>月份（YYYY-MM）</span>
+          <input id="yearMonth" placeholder="例如 2026-03" />
+        </label>
+
+        <label>
+          <span>主題（Theme）</span>
+          <input id="theme" placeholder="例如 春天 / 沙灘 / 中秋" />
+        </label>
+
+        <label>
+          <span>備註</span>
+          <input id="notes" placeholder="可留空" />
+        </label>
+      </div>
+
+      <div class="row">
+        <button id="btnCreateMonth" class="primary">新增月份</button>
+        <span id="msg" class="msg"></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row space-between">
+        <h2>月份列表</h2>
+        <button id="btnRefresh" class="ghost">重新整理</button>
+      </div>
+      <div id="monthsList" class="list"></div>
+    </section>
+
+    <section class="card">
+      <h2>小提醒</h2>
+      <ul class="tips">
+        <li>點月份卡片會進入第二層頁面（W1~W4、活動、變更紀錄）。</li>
+        <li>如果你之後想新增「平台/品項/主題」的代碼規則，我可以幫你把命名自動產生。</li>
+      </ul>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+  <script>
+    Planner.initIndex();
+  </script>
+</body>
+</html>
