@@ -4,775 +4,380 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>行銷廣告專案計劃表</title>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     :root{
-      --brand: #AE8E53;
-      --brand-ink: #6E572C;
-
-      --bg: #F6F5F2;
-      --paper: #FFFFFF;
-      --paper-2: #FBFAF8;
-
-      --text: #151515;
-      --muted: rgba(21,21,21,.58);
-
-      --line: rgba(21,21,21,.08);
-      --line-strong: rgba(21,21,21,.12);
-
-      --shadow-1: 0 10px 28px rgba(0,0,0,.06);
-      --shadow-2: 0 18px 52px rgba(0,0,0,.10);
-
-      --r-xl: 26px;
-      --r-lg: 18px;
-
-      --focus: rgba(174,142,83,.22);
+      --brand:#AE8E53; --bg:#F6F5F2; --paper:#fff; --paper2:#FBFAF8;
+      --text:#151515; --muted:rgba(21,21,21,.58); --line:rgba(21,21,21,.10);
+      --shadow:0 12px 32px rgba(0,0,0,.08); --r:22px; --focus:rgba(174,142,83,.22);
     }
+    *{box-sizing:border-box} html,body{margin:0}
+    body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"PingFang TC","Microsoft JhengHei",Arial;letter-spacing:.2px}
+    .hidden{display:none!important}
 
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0}
-    body{
-      background: var(--bg);
-      color: var(--text);
-      font-family: ui-sans-serif, system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei", Arial;
-      -webkit-font-smoothing: antialiased;
-      letter-spacing: .2px;
+    header{
+      position:sticky;top:0;z-index:20;
+      background:rgba(246,245,242,.92);backdrop-filter:blur(10px);
+      border-bottom:1px solid var(--line);
+      padding:16px 18px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;
     }
+    .kicker{font-size:12px;letter-spacing:.22em;font-weight:900;color:var(--brand)}
+    h1{margin:6px 0 0;font-size:28px;font-weight:900}
+    .btn{
+      border:1px solid var(--line);background:rgba(255,255,255,.9);
+      padding:10px 14px;border-radius:999px;font-weight:900;cursor:pointer;
+      box-shadow:0 8px 16px rgba(0,0,0,.06);transition:.12s;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+    .btn.ghost{background:transparent;box-shadow:none}
 
-    .hidden{display:none !important;}
-
-    .topbar{
-      position: sticky;
-      top: 0;
-      z-index: 30;
-      background: rgba(246,245,242,.92);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--line);
-      padding: 18px 20px 14px;
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap: 14px;
+    main{max-width:1100px;margin:0 auto;padding:18px 18px 60px}
+    .notice{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px;box-shadow:0 8px 20px rgba(0,0,0,.06);margin:10px 0 16px;color:rgba(21,21,21,.75)}
+    .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:6px 0 16px}
+    select,input{
+      width:100%;padding:12px 12px;border-radius:16px;border:1px solid var(--line);
+      background:var(--paper2);outline:none;font-size:14px;transition:.12s;
     }
-    .title-block{display:flex;flex-direction:column;gap:6px}
-    .kicker{
-      font-size: 12px;
-      letter-spacing: .22em;
-      font-weight: 900;
-      color: var(--brand);
-    }
-    .title{
-      margin:0;
-      font-size: 34px;
-      font-weight: 900;
-      letter-spacing: .02em;
-    }
-    .right{display:flex;gap:10px;align-items:center}
-
-    .page{
-      max-width: 1140px;
-      margin: 0 auto;
-      padding: 18px 18px 64px;
-    }
-
-    .pill{
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.85);
-      color: var(--text);
-      border-radius: 999px;
-      padding: 12px 18px;
-      font-weight: 900;
-      cursor:pointer;
-      text-decoration:none;
-      box-shadow: 0 10px 20px rgba(0,0,0,.06);
-      transition: transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-    }
-    .pill:hover{
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-1);
-      border-color: var(--line-strong);
-    }
-    .pill-primary{
-      background: var(--brand);
-      border-color: var(--brand);
-      color: #fff;
-      box-shadow: 0 14px 28px rgba(174,142,83,.28);
-    }
-    .pill-primary:hover{
-      background: var(--brand-ink);
-      border-color: var(--brand-ink);
-      box-shadow: 0 18px 42px rgba(110,87,44,.26);
-    }
-
-    .toolbar{position:relative;margin:14px 0 18px;display:flex;gap:12px;flex-wrap:wrap}
-    .pill-filter{
-      min-width: 240px;
-      justify-content:center;
-      background: rgba(255,255,255,.70);
-    }
-
-    .dropdown{
-      position:absolute;
-      top: 54px;
-      left: 0;
-      width: 240px;
-      background: var(--paper);
-      border: 1px solid var(--line);
-      border-radius: var(--r-lg);
-      box-shadow: var(--shadow-1);
-      padding: 8px;
-      z-index: 40;
-    }
-    .dropdown-item{
-      padding: 10px 12px;
-      border-radius: 14px;
-      cursor:pointer;
-      font-weight: 800;
-      color: rgba(21,21,21,.80);
-      transition: background .12s ease;
-    }
-    .dropdown-item:hover{
-      background: rgba(174,142,83,.10);
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(4, minmax(0,1fr));
-      gap: 18px;
-    }
-    @media(max-width:980px){ .grid{ grid-template-columns: repeat(2, 1fr); } }
-    @media(max-width:520px){ .grid{ grid-template-columns: 1fr; } }
-
+    select:focus,input:focus{background:#fff;border-color:rgba(174,142,83,.45);box-shadow:0 0 0 4px var(--focus)}
+    .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+    @media(max-width:980px){.grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:520px){.grid{grid-template-columns:1fr}}
     .card{
-      background: var(--paper);
-      border: 1px solid rgba(21,21,21,.06);
-      border-radius: var(--r-xl);
-      padding: 18px;
-      box-shadow: var(--shadow-1);
-      cursor:pointer;
-      min-height: 180px;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-      transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
-      position: relative;
-      overflow: hidden;
+      background:var(--paper);border:1px solid rgba(21,21,21,.06);border-radius:var(--r);
+      padding:16px;box-shadow:0 10px 24px rgba(0,0,0,.06);cursor:pointer;min-height:160px;
+      display:flex;flex-direction:column;justify-content:space-between;
     }
-    .card::before{
-      content:"";
-      position:absolute;
-      inset: 0;
-      background: radial-gradient(900px 280px at 20% 0%, rgba(174,142,83,.18), transparent 55%);
-      pointer-events:none;
-      opacity: .9;
-    }
-    .card:hover{
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-2);
-      border-color: rgba(174,142,83,.20);
-    }
-    .card .big{
-      font-size: 22px;
-      font-weight: 950;
-      line-height: 1.2;
-      letter-spacing: .02em;
-    }
-    .card .meta{
-      margin-top: 12px;
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.65;
-    }
+    .card .title{font-size:18px;font-weight:950;line-height:1.2}
+    .card .meta{margin-top:10px;font-size:12px;color:var(--muted);line-height:1.55}
 
-    .panel{
-      background: var(--paper);
-      border: 1px solid rgba(21,21,21,.06);
-      border-radius: var(--r-xl);
-      box-shadow: var(--shadow-1);
-      padding: 18px;
-      margin: 14px 0;
-    }
-    .panel-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-    .panel-title{
-      font-size: 16px;
-      font-weight: 950;
-      letter-spacing: .02em;
-    }
-    .panel-actions{display:flex;gap:10px;flex-wrap:wrap}
-
-    .label{
-      font-size: 12px;
-      color: rgba(21,21,21,.55);
-      margin-bottom: 8px;
-      font-weight: 900;
-    }
-    .info-grid{
-      display:grid;
-      grid-template-columns: repeat(3, minmax(0,1fr));
-      gap: 12px;
-    }
-    @media(max-width:900px){ .info-grid{ grid-template-columns: 1fr; } }
-
-    input, select{
-      width:100%;
-      padding: 14px 14px;
-      border-radius: 18px;
-      border: 1px solid rgba(21,21,21,.08);
-      background: var(--paper-2);
-      outline:none;
-      font-size: 14px;
-      transition: box-shadow .12s ease, border-color .12s ease, background .12s ease;
-    }
-    input:focus, select:focus{
-      border-color: rgba(174,142,83,.45);
-      background: #fff;
-      box-shadow: 0 0 0 4px var(--focus);
-    }
-    .full{grid-column:1 / -1}
-
-    .stack{display:flex;flex-direction:column;gap:12px}
-
-    .item{
-      background: var(--paper);
-      border: 1px solid rgba(21,21,21,.06);
-      border-radius: var(--r-lg);
-      padding: 14px;
-      display:flex;
-      justify-content:space-between;
-      gap: 12px;
-      align-items:flex-start;
-    }
+    .box{background:var(--paper);border:1px solid rgba(21,21,21,.06);border-radius:var(--r);padding:16px;box-shadow:0 10px 24px rgba(0,0,0,.06);margin:12px 0}
+    .boxhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+    .boxhead .h{font-weight:950}
+    .stack{display:flex;flex-direction:column;gap:10px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .item{border:1px solid rgba(21,21,21,.08);border-radius:16px;padding:12px;background:#fff;display:flex;justify-content:space-between;gap:10px}
     .item .t{font-weight:950}
-    .item .s{
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 6px;
-      line-height: 1.6;
-    }
-    .item .actions{display:flex;gap:10px;flex-wrap:wrap}
+    .item .s{margin-top:6px;font-size:12px;color:var(--muted);line-height:1.55}
+    .muted{font-size:12px;color:var(--muted)}
 
-    .msg{font-size:12px;color:rgba(21,21,21,.6)}
-    .alert{
-      background: #fff;
-      border: 1px solid rgba(21,21,21,.10);
-      border-radius: 18px;
-      padding: 14px;
-      box-shadow: var(--shadow-1);
-      margin: 10px 0 18px;
-      color: rgba(21,21,21,.75);
-      line-height: 1.6;
-    }
-
-    /* ===== Modal：穩定版（不會一半不能點） ===== */
-    .modal{
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      background: rgba(0,0,0,.22);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding: 18px;
-      overflow: hidden; /* 外層不滾 */
-    }
-    .modal-card{
-      width: min(920px, 100%);
-      background: var(--paper);
-      border: 1px solid rgba(21,21,21,.10);
-      border-radius: var(--r-xl);
-      box-shadow: var(--shadow-2);
-      max-height: calc(100vh - 36px);
-      overflow: auto; /* 只讓卡片內滾 */
-      -webkit-overflow-scrolling: touch;
-      padding: 18px;
-    }
-    .modal-head{
-      position: static; /* 不用 sticky，避免點擊被遮 */
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      margin-bottom: 12px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid rgba(21,21,21,.06);
-    }
-    .modal-title{font-size: 18px;font-weight: 950;}
-    .form{display:flex;flex-direction:column;gap:12px}
-    .form-row{
-      display:grid;
-      grid-template-columns: repeat(2, minmax(0,1fr));
-      gap: 12px;
-    }
-    @media(max-width:900px){ .form-row{ grid-template-columns: 1fr; } }
-    .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    /* modal: 外層不滾，卡片內滾 -> 避免「半邊不能點」 */
+    .modal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;padding:16px;overflow:hidden}
+    .modalcard{width:min(900px,100%);max-height:calc(100vh - 32px);overflow:auto;-webkit-overflow-scrolling:touch;background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px}
+    .modalhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(21,21,21,.06)}
+    label span{display:block;font-size:12px;color:rgba(21,21,21,.55);font-weight:900;margin-bottom:6px}
+    .formgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+    @media(max-width:900px){.formgrid{grid-template-columns:1fr}}
+    .full{grid-column:1/-1}
   </style>
 </head>
-<body>
 
-  <header class="topbar">
-    <div class="title-block">
+<body>
+  <header>
+    <div>
       <div class="kicker" id="kicker">MARKETING</div>
-      <h1 class="title" id="topTitle">行銷廣告專案計劃表</h1>
+      <h1 id="topTitle">行銷廣告專案計劃表</h1>
     </div>
-    <div class="right">
-      <button id="btnBack" class="pill hidden">回選單</button>
-      <button id="btnOpenNewProject" class="pill pill-primary">新增專案按鈕</button>
+    <div class="row">
+      <button id="btnBack" class="btn ghost hidden">回選單</button>
+      <button id="btnNewProject" class="btn primary">新增專案</button>
     </div>
   </header>
 
-  <main class="page">
-    <div id="sysMsg" class="alert hidden"></div>
+  <main>
+    <div id="sysMsg" class="notice hidden"></div>
 
-    <!-- ✅ 初始只顯示這個：專案卡片牆 -->
-    <section id="viewProjects">
-      <section class="toolbar">
-        <div class="pill pill-filter" id="yearPill">年度篩選器</div>
-        <div id="yearDropdown" class="dropdown hidden">
-          <div class="dropdown-item" data-year="ALL">全部年度</div>
-          <div id="yearOptions"></div>
-        </div>
-      </section>
-      <section id="grid" class="grid"></section>
+    <!-- List -->
+    <section id="viewList">
+      <div class="bar">
+        <select id="yearSelect">
+          <option value="ALL">全部年度</option>
+        </select>
+      </div>
+      <div id="grid" class="grid"></div>
     </section>
 
-    <!-- ✅ 初始必定 hidden：專案詳情 -->
-    <section id="viewProjectDetail" class="hidden">
-      <section class="panel">
-        <div class="panel-head">
-          <div class="panel-title">專案資訊</div>
-          <div class="panel-actions">
-            <button id="btnInitWeeks" class="pill">一鍵建立 W1~W4</button>
-            <button id="btnSaveProject" class="pill pill-primary">儲存</button>
+    <!-- Detail -->
+    <section id="viewDetail" class="hidden">
+      <section class="box">
+        <div class="boxhead">
+          <div class="h">專案資訊</div>
+          <div class="row">
+            <button id="btnInitWeeks" class="btn">一鍵建立 W1~W4</button>
+            <button id="btnSaveProject" class="btn primary">儲存</button>
           </div>
         </div>
 
-        <div class="info-grid">
-          <label><div class="label">年度</div><input id="fYear" type="number" /></label>
-          <label><div class="label">專案名稱</div><input id="fTitle" /></label>
-          <label><div class="label">品項</div><input id="fProduct" /></label>
+        <div class="formgrid">
+          <label><span>年度</span><input id="fYear" type="number"></label>
+          <label class="full"><span>專案名稱</span><input id="fTitle"></label>
+          <label><span>品項</span><input id="fProduct"></label>
 
-          <label><div class="label">主題</div><input id="fTheme" /></label>
-          <label><div class="label">平台</div><input id="fPlatforms" /></label>
-          <label><div class="label">門市</div><input id="fStore" /></label>
+          <label><span>主題</span><input id="fTheme"></label>
+          <label><span>平台</span><input id="fPlatforms"></label>
+          <label><span>門市</span><input id="fStore"></label>
 
-          <label><div class="label">目標</div><input id="fObjective" /></label>
-          <label><div class="label">狀態</div><input id="fStatus" /></label>
-          <label><div class="label">開始日</div><input id="fStart" type="date" /></label>
+          <label><span>目標</span><input id="fObjective"></label>
+          <label><span>狀態</span><input id="fStatus"></label>
+          <label><span>開始日</span><input id="fStart" type="date"></label>
 
-          <label><div class="label">結束日</div><input id="fEnd" type="date" /></label>
-          <label class="full"><div class="label">備註</div><input id="fNotes" /></label>
+          <label><span>結束日</span><input id="fEnd" type="date"></label>
+          <label class="full"><span>備註</span><input id="fNotes"></label>
         </div>
 
-        <div id="pmsg" class="msg"></div>
+        <div id="pmsg" class="muted"></div>
       </section>
 
-      <section class="panel">
-        <div class="panel-head"><div class="panel-title">W1~W4 投放節奏</div></div>
+      <section class="box">
+        <div class="boxhead"><div class="h">W1~W4 投放節奏</div></div>
         <div id="weeks" class="stack"></div>
       </section>
 
-      <section class="panel">
-        <div class="panel-head">
-          <div class="panel-title">活動（Campaigns）</div>
-          <button id="btnNewCampaign" class="pill">新增活動</button>
+      <section class="box">
+        <div class="boxhead">
+          <div class="h">活動（Campaigns）</div>
+          <button id="btnNewCampaign" class="btn">新增活動</button>
         </div>
         <div id="campaigns" class="stack"></div>
       </section>
 
-      <section class="panel">
-        <div class="panel-head"><div class="panel-title">變更紀錄</div></div>
+      <section class="box">
+        <div class="boxhead"><div class="h">變更紀錄</div></div>
         <div id="logs" class="stack"></div>
       </section>
     </section>
   </main>
 
-  <!-- Modal: 新增專案 -->
-  <div id="modalProject" class="modal hidden">
-    <div class="modal-card">
-      <div class="modal-head">
-        <div class="modal-title">新增專案</div>
-        <button id="btnCloseProjectModal" class="pill">關閉</button>
+  <!-- Modal: Project -->
+  <div id="mProject" class="modal hidden">
+    <div class="modalcard">
+      <div class="modalhead">
+        <div class="h">新增專案</div>
+        <button class="btn" data-close="mProject">關閉</button>
       </div>
-      <div class="form">
-        <label><div class="label">年度</div><input id="pYear" type="number" placeholder="例如 2026" /></label>
-        <label><div class="label">專案名稱（卡片大字）</div><input id="pTitle" placeholder="例如：春天｜電池更換｜訊息主力" /></label>
 
-        <div class="form-row">
-          <label>
-            <div class="label">主打品項</div>
-            <select id="pProduct">
-              <option value="電池更換">電池更換</option>
-              <option value="螢幕更換">螢幕更換</option>
-              <option value="主機板維修">主機板維修</option>
-              <option value="資料救援">資料救援</option>
-              <option value="Switch維修">Switch維修</option>
-            </select>
-          </label>
-          <label><div class="label">主題</div><input id="pTheme" placeholder="春天 / 沙灘 / 中秋" /></label>
-        </div>
+      <div class="formgrid">
+        <label><span>年度</span><input id="pYear" type="number" placeholder="例如 2026"></label>
+        <label class="full"><span>專案名稱</span><input id="pTitle" placeholder="例如：春天｜電池更換｜訊息主力"></label>
 
-        <div class="form-row">
-          <label>
-            <div class="label">平台</div>
-            <select id="pPlatforms">
-              <option value="META">META</option>
-              <option value="GOOGLE">GOOGLE</option>
-              <option value="META,GOOGLE">META + GOOGLE</option>
-            </select>
-          </label>
-          <label>
-            <div class="label">門市</div>
-            <select id="pStore">
-              <option value="勤美">勤美</option>
-              <option value="沙鹿">沙鹿</option>
-              <option value="勤美/沙鹿">勤美/沙鹿</option>
-            </select>
-          </label>
-        </div>
+        <label><span>品項</span><input id="pProduct" placeholder="電池更換/資料救援..."></label>
+        <label><span>主題</span><input id="pTheme" placeholder="春天/沙灘/中秋"></label>
+        <label><span>平台</span><input id="pPlatforms" placeholder="META/GOOGLE/META,GOOGLE"></label>
 
-        <div class="form-row">
-          <label>
-            <div class="label">目標</div>
-            <select id="pObjective">
-              <option value="MSG">MSG（訊息）</option>
-              <option value="LEAD">LEAD（表單）</option>
-              <option value="CALL">CALL（來電）</option>
-            </select>
-          </label>
-          <label>
-            <div class="label">狀態</div>
-            <select id="pStatus">
-              <option value="規劃中">規劃中</option>
-              <option value="投放中">投放中</option>
-              <option value="結案">結案</option>
-            </select>
-          </label>
-        </div>
+        <label><span>門市</span><input id="pStore" placeholder="勤美/沙鹿"></label>
+        <label><span>目標</span><input id="pObjective" placeholder="MSG/LEAD/CALL"></label>
+        <label><span>狀態</span><input id="pStatus" placeholder="規劃中/投放中/結案"></label>
 
-        <div class="form-row">
-          <label><div class="label">開始日</div><input id="pStart" type="date" /></label>
-          <label><div class="label">結束日</div><input id="pEnd" type="date" /></label>
-        </div>
+        <label><span>開始日</span><input id="pStart" type="date"></label>
+        <label><span>結束日</span><input id="pEnd" type="date"></label>
+        <label class="full"><span>備註</span><input id="pNotes"></label>
+      </div>
 
-        <label><div class="label">備註</div><input id="pNotes" placeholder="可留空" /></label>
-
-        <div class="actions">
-          <button id="btnCreateProject" class="pill pill-primary">建立專案</button>
-          <div id="msg" class="msg"></div>
-        </div>
+      <div class="row" style="margin-top:12px">
+        <button id="btnCreateProject" class="btn primary">建立專案</button>
+        <div id="msg" class="muted"></div>
       </div>
     </div>
   </div>
 
-  <!-- Modal: 新增活動 -->
-  <div id="modalCampaign" class="modal hidden">
-    <div class="modal-card">
-      <div class="modal-head">
-        <div class="modal-title">新增活動</div>
-        <button id="btnCloseCampaignModal" class="pill">關閉</button>
+  <!-- Modal: Campaign -->
+  <div id="mCampaign" class="modal hidden">
+    <div class="modalcard">
+      <div class="modalhead">
+        <div class="h">新增活動</div>
+        <button class="btn" data-close="mCampaign">關閉</button>
       </div>
 
-      <div class="form">
-        <label><div class="label">活動名稱</div><input id="cName" placeholder="例如 META_KM_BAT_SPR_MSG_202603" /></label>
-        <div class="form-row">
-          <label><div class="label">平台</div><input id="cPlatform" placeholder="META/GOOGLE" /></label>
-          <label><div class="label">門市</div><input id="cStore" placeholder="勤美/沙鹿" /></label>
-        </div>
-        <div class="form-row">
-          <label><div class="label">品項</div><input id="cProduct" placeholder="電池更換/資料救援..." /></label>
-          <label><div class="label">主題</div><input id="cTheme" placeholder="春天/沙灘/中秋" /></label>
-        </div>
-        <div class="form-row">
-          <label><div class="label">目標</div><input id="cObjective" placeholder="MSG/LEAD/CALL" /></label>
-          <label><div class="label">狀態</div><input id="cStatus" placeholder="規劃中/投放中/結案" /></label>
-        </div>
-        <div class="form-row">
-          <label><div class="label">開始日</div><input id="cStart" type="date" /></label>
-          <label><div class="label">結束日</div><input id="cEnd" type="date" /></label>
-        </div>
-        <label><div class="label">預算備註</div><input id="cBudget" placeholder="每日 300 / 放大到 360" /></label>
-        <div class="actions">
-          <button id="btnCreateCampaign" class="pill pill-primary">建立活動</button>
-          <div id="cmsg" class="msg"></div>
-        </div>
+      <div class="formgrid">
+        <label class="full"><span>活動名稱</span><input id="cName" placeholder="META_KM_BAT_SPR_MSG_202603"></label>
+        <label><span>平台</span><input id="cPlatform"></label>
+        <label><span>門市</span><input id="cStore"></label>
+        <label><span>品項</span><input id="cProduct"></label>
+        <label><span>主題</span><input id="cTheme"></label>
+        <label><span>目標</span><input id="cObjective"></label>
+        <label><span>狀態</span><input id="cStatus"></label>
+        <label><span>開始日</span><input id="cStart" type="date"></label>
+        <label><span>結束日</span><input id="cEnd" type="date"></label>
+        <label class="full"><span>預算備註</span><input id="cBudget"></label>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <button id="btnCreateCampaign" class="btn primary">建立活動</button>
+        <div id="cmsg" class="muted"></div>
       </div>
     </div>
   </div>
 
-  <!-- Modal: 新增變更 -->
-  <div id="modalLog" class="modal hidden" data-cid="">
-    <div class="modal-card">
-      <div class="modal-head">
-        <div class="modal-title">新增變更紀錄</div>
-        <button id="btnCloseLogModal" class="pill">關閉</button>
+  <!-- Modal: Log -->
+  <div id="mLog" class="modal hidden" data-cid="">
+    <div class="modalcard">
+      <div class="modalhead">
+        <div class="h">新增變更紀錄</div>
+        <button class="btn" data-close="mLog">關閉</button>
       </div>
 
-      <div class="form">
-        <div class="form-row">
-          <label><div class="label">改動類型</div><input id="lType" placeholder="預算/素材/文案..." /></label>
-          <label><div class="label">Before</div><input id="lBefore" /></label>
-        </div>
-        <div class="form-row">
-          <label><div class="label">After</div><input id="lAfter" /></label>
-          <label><div class="label">原因/假設</div><input id="lHypo" /></label>
-        </div>
-        <div class="actions">
-          <button id="btnCreateLog" class="pill pill-primary">儲存紀錄</button>
-          <div id="lmsg" class="msg"></div>
-        </div>
+      <div class="formgrid">
+        <label><span>改動類型</span><input id="lType" placeholder="預算/素材/文案..."></label>
+        <label><span>Before</span><input id="lBefore"></label>
+        <label><span>After</span><input id="lAfter"></label>
+        <label class="full"><span>原因/假設</span><input id="lHypo"></label>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <button id="btnCreateLog" class="btn primary">儲存紀錄</button>
+        <div id="lmsg" class="muted"></div>
       </div>
     </div>
   </div>
 
   <script>
-    /* ========= 你只要改這兩行 ========= */
+    /* Supabase */
     const SUPABASE_URL = "https://udycidkswyqasnzwlmqv.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkeWNpZGtzd3lxYXNuendsbXF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODYzNzUsImV4cCI6MjA4ODI2MjM3NX0.Gu68eely_7xJrRBAuevEXzPt93Hnzr1fVwnz3SSp3pk ";
-    /* ================================= */
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkeWNpZGtzd3lxYXNuendsbXF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODYzNzUsImV4cCI6MjA4ODI2MjM3NX0.Gu68eely_7xJrRBAuevEXzPt93Hnzr1fVwnz3SSp3pk";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const $ = (id) => document.getElementById(id);
-    const esc = (s="") => String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
-    const hasKey = () => SUPABASE_ANON_KEY && SUPABASE_ANON_KEY.length > 30 && !SUPABASE_ANON_KEY.includes("貼上你的");
+    /* tiny helpers */
+    const $ = (id)=>document.getElementById(id);
+    const show = (el)=>el.classList.remove("hidden");
+    const hide = (el)=>el.classList.add("hidden");
+    const esc = (s="")=>String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+    async function q(p){ const {data,error}=await p; if(error) throw error; return data; }
 
-    let supabase = null;
+    const S = { year:"ALL", project:null };
 
-    function show(el){ el.classList.remove("hidden"); }
-    function hide(el){ el.classList.add("hidden"); }
-
-    function setSystemMsg(text){
+    function notice(msg){
       const box = $("sysMsg");
-      if (!text){ hide(box); box.textContent=""; return; }
-      box.textContent = text;
-      show(box);
+      if(!msg){ hide(box); box.textContent=""; return; }
+      box.textContent = msg; show(box);
     }
 
-    // ===== 視圖切換：保證不會兩個 view 疊在一起 =====
-    function showListView(){
-      $("kicker").textContent = "MARKETING";
-      $("topTitle").textContent = "行銷廣告專案計劃表";
-      hide($("btnBack"));
-      show($("btnOpenNewProject"));
-
-      show($("viewProjects"));
-      hide($("viewProjectDetail"));
+    function viewList(){
+      $("kicker").textContent="MARKETING";
+      $("topTitle").textContent="行銷廣告專案計劃表";
+      hide($("btnBack")); show($("btnNewProject"));
+      show($("viewList")); hide($("viewDetail"));
     }
-    function showDetailView(title){
-      $("kicker").textContent = "PROJECT";
-      $("topTitle").textContent = title || "專案";
-      show($("btnBack"));
-      hide($("btnOpenNewProject"));
-
-      hide($("viewProjects"));
-      show($("viewProjectDetail"));
+    function viewDetail(title){
+      $("kicker").textContent="PROJECT";
+      $("topTitle").textContent=title||"專案";
+      show($("btnBack")); hide($("btnNewProject"));
+      hide($("viewList")); show($("viewDetail"));
     }
 
-    function parseHashProjectId(){
-      const h = location.hash || "";
-      const m = h.match(/#project=([^&]+)/);
-      return m ? decodeURIComponent(m[1]) : null;
-    }
-    function openProjectDetail(projectId){
-      location.hash = `#project=${encodeURIComponent(projectId)}`;
-    }
-    function backToList(){ location.hash = ""; }
+    const pidFromHash=()=> (location.hash.match(/#project=([^&]+)/)||[])[1] ? decodeURIComponent((location.hash.match(/#project=([^&]+)/)||[])[1]) : null;
+    const openProject=(id)=> location.hash = `#project=${encodeURIComponent(id)}`;
+    const back=()=> location.hash="";
 
-    // ===== Modal：關閉（按鈕/背景/ESC）=====
-    function setupModal(modalId, closeBtnId){
-      const modal = $(modalId);
-      $(closeBtnId).addEventListener("click", ()=> hide(modal));
-      modal.addEventListener("click",(e)=>{ if (e.target === modal) hide(modal); });
-      return modal;
+    /* modals: close btn + click backdrop + ESC */
+    function setupModal(id){
+      const m=$(id);
+      m.addEventListener("click",e=>{ if(e.target===m) hide(m); });
+      document.querySelectorAll(`[data-close="${id}"]`).forEach(b=>b.onclick=()=>hide(m));
+      return m;
     }
-    const modalProject = setupModal("modalProject","btnCloseProjectModal");
-    const modalCampaign = setupModal("modalCampaign","btnCloseCampaignModal");
-    const modalLog = setupModal("modalLog","btnCloseLogModal");
-
+    const mProject=setupModal("mProject"), mCampaign=setupModal("mCampaign"), mLog=setupModal("mLog");
     document.addEventListener("keydown",(e)=>{
-      if (e.key !== "Escape") return;
-      if (!modalProject.classList.contains("hidden")) hide(modalProject);
-      if (!modalCampaign.classList.contains("hidden")) hide(modalCampaign);
-      if (!modalLog.classList.contains("hidden")) hide(modalLog);
-      if (!$("yearDropdown").classList.contains("hidden")) hide($("yearDropdown"));
+      if(e.key!=="Escape") return;
+      [mProject,mCampaign,mLog].forEach(m=>!m.classList.contains("hidden")&&hide(m));
     });
 
-    // ===== Supabase API =====
-    async function listProjects(year){
-      let q = supabase.from("projects").select("*").order("created_at",{ascending:false});
-      if (year && year !== "ALL") q = q.eq("year", Number(year));
-      const { data, error } = await q;
-      if (error) throw error;
-      return data || [];
-    }
-    async function listYears(){
-      const { data, error } = await supabase.from("projects").select("year").order("year",{ascending:false});
-      if (error) throw error;
-      return [...new Set((data||[]).map(x=>x.year).filter(Boolean))];
-    }
-    async function createProject(payload){
-      const { data, error } = await supabase.from("projects").insert(payload).select().single();
-      if (error) throw error;
-      return data;
-    }
-    async function getProject(id){
-      const { data, error } = await supabase.from("projects").select("*").eq("id", id).single();
-      if (error) throw error;
-      return data;
-    }
-    async function updateProject(id, payload){
-      const { data, error } = await supabase.from("projects").update(payload).eq("id", id).select().single();
-      if (error) throw error;
-      return data;
-    }
+    /* DB APIs */
+    const api = {
+      years: async()=> {
+        const rows = await q(supabase.from("projects").select("year").order("year",{ascending:false}));
+        return [...new Set(rows.map(r=>r.year).filter(Boolean))];
+      },
+      projects: async(year)=>{
+        let p=supabase.from("projects").select("*").order("created_at",{ascending:false});
+        if(year && year!=="ALL") p=p.eq("year",Number(year));
+        return await q(p);
+      },
+      createProject: async(p)=> await q(supabase.from("projects").insert(p).select().single()),
+      getProject: async(id)=> await q(supabase.from("projects").select("*").eq("id",id).single()),
+      updateProject: async(id,p)=> await q(supabase.from("projects").update(p).eq("id",id).select().single()),
+      weeks: async(pid)=> await q(supabase.from("playbook_weeks").select("*").eq("project_id",pid).order("week",{ascending:true})),
+      ensureWeeks: async(pid)=>{
+        const have = new Set((await api.weeks(pid)).map(w=>w.week));
+        for(const w of ["W1","W2","W3","W4"]) if(!have.has(w)) await q(supabase.from("playbook_weeks").insert({project_id:pid,week:w}));
+      },
+      saveWeek: async(id,focus,plan)=> { await q(supabase.from("playbook_weeks").update({focus,plan}).eq("id",id)); },
+      campaigns: async(pid)=> await q(supabase.from("campaigns").select("*").eq("project_id",pid).order("created_at",{ascending:false})),
+      createCampaign: async(c)=> await q(supabase.from("campaigns").insert(c).select().single()),
+      logs: async(pid)=>{
+        const camps = await api.campaigns(pid);
+        const ids = camps.map(c=>c.id); if(!ids.length) return [];
+        const logs = await q(supabase.from("change_log").select("*").in("campaign_id",ids).order("timestamp",{ascending:false}));
+        const map = new Map(camps.map(c=>[c.id,c.campaign_name]));
+        return logs.map(r=>({...r,campaign_name:map.get(r.campaign_id)||""}));
+      },
+      createLog: async(l)=> await q(supabase.from("change_log").insert(l).select().single()),
+    };
 
-    async function listWeeks(project_id){
-      const { data, error } = await supabase.from("playbook_weeks")
-        .select("*").eq("project_id", project_id).order("week",{ascending:true});
-      if (error) throw error;
-      return data || [];
-    }
-    async function ensureWeeks(project_id){
-      const weeks = await listWeeks(project_id);
-      const have = new Set(weeks.map(w=>w.week));
-      const need = ["W1","W2","W3","W4"].filter(w=>!have.has(w));
-      for (const w of need){
-        const { error } = await supabase.from("playbook_weeks").insert({ project_id, week: w });
-        if (error) throw error;
-      }
-    }
-    async function saveWeek(id, focus, plan){
-      const { error } = await supabase.from("playbook_weeks").update({focus, plan}).eq("id", id);
-      if (error) throw error;
-    }
-
-    async function listCampaigns(project_id){
-      const { data, error } = await supabase.from("campaigns")
-        .select("*").eq("project_id", project_id).order("created_at",{ascending:false});
-      if (error) throw error;
-      return data || [];
-    }
-    async function createCampaign(payload){
-      const { data, error } = await supabase.from("campaigns").insert(payload).select().single();
-      if (error) throw error;
-      return data;
-    }
-
-    async function listLogs(project_id){
-      const camps = await listCampaigns(project_id);
-      const ids = camps.map(c=>c.id);
-      if (!ids.length) return [];
-      const { data, error } = await supabase.from("change_log")
-        .select("*").in("campaign_id", ids).order("timestamp",{ascending:false});
-      if (error) throw error;
-      const map = new Map(camps.map(c=>[c.id, c.campaign_name]));
-      return (data||[]).map(r=>({...r, campaign_name: map.get(r.campaign_id)||""}));
-    }
-    async function createLog(payload){
-      const { data, error } = await supabase.from("change_log").insert(payload).select().single();
-      if (error) throw error;
-      return data;
-    }
-
-    // ===== UI render =====
-    let currentYear = "ALL";
-    let currentProject = null;
-
-    async function renderYears(){
-      const dd = $("yearDropdown");
-      const yearOptions = $("yearOptions");
-      const years = await listYears();
-      yearOptions.innerHTML = years.map(y=>`<div class="dropdown-item" data-year="${y}">${y}</div>`).join("");
-
-      dd.querySelectorAll(".dropdown-item").forEach(el=>{
-        el.onclick = async ()=>{
-          currentYear = el.dataset.year;
-          hide(dd);
-          await renderProjects();
-        };
-      });
+    /* render */
+    async function renderYearSelect(){
+      const sel=$("yearSelect");
+      const years = await api.years();
+      sel.innerHTML = `<option value="ALL">全部年度</option>` + years.map(y=>`<option value="${y}">${y}</option>`).join("");
+      sel.value = S.year;
+      sel.onchange = async()=>{ S.year=sel.value; await renderProjects(); };
     }
 
     async function renderProjects(){
-      const grid = $("grid");
-      const projects = await listProjects(currentYear);
-
-      if (!projects.length){
-        grid.innerHTML = `
-          <div class="card" style="grid-column:1/-1; cursor:default;">
-            <div class="big">尚無專案</div>
-            <div class="meta">點右上角「新增專案按鈕」建立第一個專案。</div>
-          </div>`;
+      const grid=$("grid");
+      const list=await api.projects(S.year);
+      if(!list.length){
+        grid.innerHTML = `<div class="card" style="grid-column:1/-1;cursor:default">
+          <div class="title">尚無專案</div><div class="meta">點右上「新增專案」建立第一個。</div></div>`;
         return;
       }
-
-      grid.innerHTML = projects.map(p=>`
+      grid.innerHTML = list.map(p=>`
         <div class="card" data-id="${p.id}">
-          <div class="big">${esc(p.title)}</div>
-          <div class="meta">
-            ${esc(p.year)}｜${esc(p.product||"")}｜${esc(p.theme||"")}<br/>
-            ${esc(p.platforms||"")}｜${esc(p.store||"")}｜${esc(p.objective||"")}<br/>
-            狀態：${esc(p.status||"")}
-          </div>
-        </div>
-      `).join("");
-
-      grid.querySelectorAll(".card[data-id]").forEach(c=>{
-        c.onclick = ()=> openProjectDetail(c.dataset.id);
-      });
+          <div class="title">${esc(p.title)}</div>
+          <div class="meta">${esc(p.year)}｜${esc(p.product||"")}｜${esc(p.theme||"")}<br>
+          ${esc(p.platforms||"")}｜${esc(p.store||"")}｜${esc(p.objective||"")}<br>
+          狀態：${esc(p.status||"")}</div>
+        </div>`).join("");
+      grid.querySelectorAll(".card[data-id]").forEach(c=>c.onclick=()=>openProject(c.dataset.id));
     }
 
     async function renderWeeks(){
-      const wrap = $("weeks");
-      const weeks = await listWeeks(currentProject.id);
-      if (!weeks.length){
-        wrap.innerHTML = `<div class="item"><div><div class="t">尚未建立 W1~W4</div><div class="s">點上方「一鍵建立 W1~W4」。</div></div></div>`;
+      const wrap=$("weeks"), weeks=await api.weeks(S.project.id);
+      if(!weeks.length){
+        wrap.innerHTML = `<div class="item"><div><div class="t">尚未建立 W1~W4</div><div class="s">點上方按鈕建立。</div></div></div>`;
         return;
       }
-      wrap.innerHTML = "";
+      wrap.innerHTML="";
       weeks.forEach(w=>{
-        const el = document.createElement("div");
-        el.className = "item";
+        const el=document.createElement("div");
+        el.className="item";
         el.innerHTML = `
           <div>
             <div class="t">${w.week}</div>
-            <div class="s">Focus：<input data-f="focus" value="${esc(w.focus||"")}" /></div>
-            <div class="s">Plan：<input data-f="plan" value="${esc(w.plan||"")}" /></div>
+            <div class="s">Focus：<input data-f="focus" value="${esc(w.focus||"")}"></div>
+            <div class="s">Plan：<input data-f="plan" value="${esc(w.plan||"")}"></div>
           </div>
-          <div class="actions">
-            <button class="pill" data-save>儲存</button>
-          </div>
-        `;
-        el.querySelector("[data-save]").onclick = async ()=>{
-          const focus = el.querySelector('[data-f="focus"]').value.trim();
-          const plan = el.querySelector('[data-f="plan"]').value.trim();
-          await saveWeek(w.id, focus, plan);
+          <div class="row"><button class="btn" data-save>儲存</button></div>`;
+        el.querySelector('[data-save]').onclick = async()=>{
+          await api.saveWeek(w.id,
+            el.querySelector('[data-f="focus"]').value.trim(),
+            el.querySelector('[data-f="plan"]').value.trim()
+          );
         };
         wrap.appendChild(el);
       });
     }
 
     async function renderCampaigns(){
-      const wrap = $("campaigns");
-      const list = await listCampaigns(currentProject.id);
-      if (!list.length){
-        wrap.innerHTML = `<div class="item"><div><div class="t">尚未建立活動</div><div class="s">點右上「新增活動」。</div></div></div>`;
+      const wrap=$("campaigns"), list=await api.campaigns(S.project.id);
+      if(!list.length){
+        wrap.innerHTML = `<div class="item"><div><div class="t">尚未建立活動</div><div class="s">點右上新增活動。</div></div></div>`;
         return;
       }
-      wrap.innerHTML = "";
+      wrap.innerHTML="";
       list.forEach(c=>{
-        const el = document.createElement("div");
-        el.className = "item";
+        const el=document.createElement("div");
+        el.className="item";
         el.innerHTML = `
           <div>
             <div class="t">${esc(c.campaign_name)}</div>
@@ -780,244 +385,182 @@
             <div class="s">期間：${c.start_date||"-"} ～ ${c.end_date||"-"}</div>
             <div class="s">預算：${esc(c.budget_note||"")}</div>
           </div>
-          <div class="actions">
-            <button class="pill" data-log>新增變更</button>
-          </div>
-        `;
-        el.querySelector("[data-log]").onclick = ()=>{
-          $("modalLog").dataset.cid = c.id;
-          show(modalLog);
+          <div class="row"><button class="btn" data-log>新增變更</button></div>`;
+        el.querySelector('[data-log]').onclick=()=>{
+          $("mLog").dataset.cid=c.id; show(mLog);
         };
         wrap.appendChild(el);
       });
     }
 
     async function renderLogs(){
-      const wrap = $("logs");
-      const list = await listLogs(currentProject.id);
-      if (!list.length){
-        wrap.innerHTML = `<div class="item"><div><div class="t">目前沒有變更紀錄</div><div class="s">在活動點「新增變更」即可。</div></div></div>`;
+      const wrap=$("logs"), list=await api.logs(S.project.id);
+      if(!list.length){
+        wrap.innerHTML = `<div class="item"><div><div class="t">目前沒有變更紀錄</div><div class="s">從活動按「新增變更」。</div></div></div>`;
         return;
       }
-      wrap.innerHTML = "";
+      wrap.innerHTML="";
       list.forEach(l=>{
-        const el = document.createElement("div");
-        el.className = "item";
-        el.innerHTML = `
-          <div>
-            <div class="t">${esc(l.campaign_name)}｜${esc(l.change_type)}</div>
-            <div class="s">${new Date(l.timestamp).toLocaleString()}</div>
-            <div class="s">Before：${esc(l.before||"")}</div>
-            <div class="s">After：${esc(l.after||"")}</div>
-            <div class="s">原因/假設：${esc(l.hypothesis||"")}</div>
-          </div>
-        `;
+        const el=document.createElement("div");
+        el.className="item";
+        el.innerHTML = `<div>
+          <div class="t">${esc(l.campaign_name)}｜${esc(l.change_type)}</div>
+          <div class="s">${new Date(l.timestamp).toLocaleString()}</div>
+          <div class="s">Before：${esc(l.before||"")}</div>
+          <div class="s">After：${esc(l.after||"")}</div>
+          <div class="s">原因/假設：${esc(l.hypothesis||"")}</div>
+        </div>`;
         wrap.appendChild(el);
       });
     }
 
-    async function loadProjectDetail(projectId){
-      currentProject = await getProject(projectId);
-
-      showDetailView(currentProject.title);
-
-      $("fYear").value = currentProject.year || "";
-      $("fTitle").value = currentProject.title || "";
-      $("fProduct").value = currentProject.product || "";
-      $("fTheme").value = currentProject.theme || "";
-      $("fPlatforms").value = currentProject.platforms || "";
-      $("fStore").value = currentProject.store || "";
-      $("fObjective").value = currentProject.objective || "";
-      $("fStatus").value = currentProject.status || "";
-      $("fStart").value = currentProject.start_date || "";
-      $("fEnd").value = currentProject.end_date || "";
-      $("fNotes").value = currentProject.notes || "";
-      $("pmsg").textContent = "";
-
-      await renderWeeks();
-      await renderCampaigns();
-      await renderLogs();
+    async function loadDetail(pid){
+      S.project = await api.getProject(pid);
+      viewDetail(S.project.title);
+      $("fYear").value=S.project.year||"";
+      $("fTitle").value=S.project.title||"";
+      $("fProduct").value=S.project.product||"";
+      $("fTheme").value=S.project.theme||"";
+      $("fPlatforms").value=S.project.platforms||"";
+      $("fStore").value=S.project.store||"";
+      $("fObjective").value=S.project.objective||"";
+      $("fStatus").value=S.project.status||"";
+      $("fStart").value=S.project.start_date||"";
+      $("fEnd").value=S.project.end_date||"";
+      $("fNotes").value=S.project.notes||"";
+      $("pmsg").textContent="";
+      await renderWeeks(); await renderCampaigns(); await renderLogs();
     }
 
-    // ===== wiring =====
-    $("btnBack").onclick = ()=> backToList();
-    $("btnOpenNewProject").onclick = ()=> show(modalProject);
+    /* actions */
+    $("btnBack").onclick=back;
+    $("btnNewProject").onclick=()=>show(mProject);
 
-    $("yearPill").onclick = ()=>{
-      const dd = $("yearDropdown");
-      dd.classList.contains("hidden") ? show(dd) : hide(dd);
+    $("btnCreateProject").onclick=async()=>{
+      $("msg").textContent="";
+      const year=Number($("pYear").value.trim());
+      const title=$("pTitle").value.trim();
+      if(!year||year<2000) return $("msg").textContent="年度請填正確（例如 2026）";
+      if(!title) return $("msg").textContent="專案名稱必填";
+      try{
+        const p=await api.createProject({
+          year,title,
+          product:$("pProduct").value.trim(),
+          theme:$("pTheme").value.trim(),
+          platforms:$("pPlatforms").value.trim(),
+          store:$("pStore").value.trim(),
+          objective:$("pObjective").value.trim(),
+          status:$("pStatus").value.trim()||"規劃中",
+          start_date:$("pStart").value||null,
+          end_date:$("pEnd").value||null,
+          notes:$("pNotes").value.trim(),
+        });
+        hide(mProject);
+        await renderYearSelect(); await renderProjects();
+        openProject(p.id);
+      }catch(e){ $("msg").textContent="建立失敗："+e.message; }
     };
-    document.addEventListener("click",(e)=>{
-      const dd = $("yearDropdown");
-      if (!dd.contains(e.target) && e.target !== $("yearPill")) hide(dd);
+
+    $("btnInitWeeks").onclick=async()=>{ await api.ensureWeeks(S.project.id); await renderWeeks(); };
+
+    $("btnSaveProject").onclick=async()=>{
+      try{
+        S.project = await api.updateProject(S.project.id,{
+          year:Number($("fYear").value),
+          title:$("fTitle").value.trim(),
+          product:$("fProduct").value.trim(),
+          theme:$("fTheme").value.trim(),
+          platforms:$("fPlatforms").value.trim(),
+          store:$("fStore").value.trim(),
+          objective:$("fObjective").value.trim(),
+          status:$("fStatus").value.trim(),
+          start_date:$("fStart").value||null,
+          end_date:$("fEnd").value||null,
+          notes:$("fNotes").value.trim(),
+        });
+        $("topTitle").textContent=S.project.title;
+        $("pmsg").textContent="已儲存 ✅"; setTimeout(()=>{$("pmsg").textContent=""},1200);
+      }catch(e){ $("pmsg").textContent="儲存失敗："+e.message; }
+    };
+
+    $("btnNewCampaign").onclick=()=>{
+      $("cName").value="";
+      $("cPlatform").value=S.project.platforms||"META";
+      $("cStore").value=S.project.store||"勤美";
+      $("cProduct").value=S.project.product||"";
+      $("cTheme").value=S.project.theme||"";
+      $("cObjective").value=S.project.objective||"MSG";
+      $("cStatus").value=S.project.status||"規劃中";
+      $("cStart").value=S.project.start_date||"";
+      $("cEnd").value=S.project.end_date||"";
+      $("cBudget").value="";
+      $("cmsg").textContent="";
+      show(mCampaign);
+    };
+
+    $("btnCreateCampaign").onclick=async()=>{
+      $("cmsg").textContent="";
+      const name=$("cName").value.trim();
+      if(!name) return $("cmsg").textContent="活動名稱必填";
+      try{
+        await api.createCampaign({
+          project_id:S.project.id, month_id:null,
+          platform:$("cPlatform").value.trim(),
+          store:$("cStore").value.trim(),
+          product:$("cProduct").value.trim(),
+          theme:$("cTheme").value.trim(),
+          objective:$("cObjective").value.trim(),
+          campaign_name:name,
+          start_date:$("cStart").value||null,
+          end_date:$("cEnd").value||null,
+          budget_note:$("cBudget").value.trim(),
+          status:$("cStatus").value.trim()||"規劃中"
+        });
+        hide(mCampaign);
+        await renderCampaigns(); await renderLogs();
+      }catch(e){ $("cmsg").textContent="建立失敗："+e.message; }
+    };
+
+    $("btnCreateLog").onclick=async()=>{
+      $("lmsg").textContent="";
+      const cid=$("mLog").dataset.cid;
+      if(!cid) return $("lmsg").textContent="請先從活動點『新增變更』";
+      try{
+        await api.createLog({
+          campaign_id:cid,
+          change_type:$("lType").value.trim()||"其他",
+          before:$("lBefore").value.trim(),
+          after:$("lAfter").value.trim(),
+          hypothesis:$("lHypo").value.trim(),
+        });
+        hide(mLog);
+        $("lType").value="";$("lBefore").value="";$("lAfter").value="";$("lHypo").value="";
+        await renderLogs();
+      }catch(e){ $("lmsg").textContent="儲存失敗："+e.message; }
+    };
+
+    /* router */
+    window.addEventListener("hashchange", async()=>{
+      const pid=pidFromHash();
+      try{
+        if(!pid){ viewList(); await renderYearSelect(); await renderProjects(); return; }
+        await loadDetail(pid);
+      }catch(e){
+        viewList();
+        notice("載入失敗（Supabase/RLS/網路）： "+e.message);
+      }
     });
 
-    $("btnCreateProject").onclick = async ()=>{
-      const msg = $("msg");
-      msg.textContent = "";
-
-      const year = Number($("pYear").value.trim());
-      const title = $("pTitle").value.trim();
-      const product = $("pProduct").value;
-      const theme = $("pTheme").value.trim();
-      const platforms = $("pPlatforms").value;
-      const store = $("pStore").value;
-      const objective = $("pObjective").value;
-      const status = $("pStatus").value;
-      const start_date = $("pStart").value || null;
-      const end_date = $("pEnd").value || null;
-      const notes = $("pNotes").value.trim();
-
-      if (!year || year < 2000){ msg.textContent = "年度請填正確（例如 2026）"; return; }
-      if (!title){ msg.textContent = "專案名稱必填"; return; }
-
+    /* init */
+    (async()=>{
       try{
-        const p = await createProject({ year, title, product, theme, platforms, store, objective, status, start_date, end_date, notes });
-        hide(modalProject);
-
-        $("pYear").value=""; $("pTitle").value=""; $("pTheme").value=""; $("pStart").value=""; $("pEnd").value=""; $("pNotes").value="";
-
-        await renderYears();
+        viewList();
+        await renderYearSelect();
         await renderProjects();
-
-        openProjectDetail(p.id);
+        const pid=pidFromHash();
+        if(pid) await loadDetail(pid);
       }catch(e){
-        msg.textContent = "建立失敗：" + e.message;
-      }
-    };
-
-    $("btnInitWeeks").onclick = async ()=>{
-      await ensureWeeks(currentProject.id);
-      await renderWeeks();
-    };
-
-    $("btnSaveProject").onclick = async ()=>{
-      const pmsg = $("pmsg");
-      pmsg.textContent = "";
-      try{
-        currentProject = await updateProject(currentProject.id, {
-          year: Number($("fYear").value),
-          title: $("fTitle").value.trim(),
-          product: $("fProduct").value.trim(),
-          theme: $("fTheme").value.trim(),
-          platforms: $("fPlatforms").value.trim(),
-          store: $("fStore").value.trim(),
-          objective: $("fObjective").value.trim(),
-          status: $("fStatus").value.trim(),
-          start_date: $("fStart").value || null,
-          end_date: $("fEnd").value || null,
-          notes: $("fNotes").value.trim(),
-        });
-        $("topTitle").textContent = currentProject.title;
-        pmsg.textContent = "已儲存 ✅";
-        setTimeout(()=>pmsg.textContent="",1200);
-      }catch(e){
-        pmsg.textContent = "儲存失敗：" + e.message;
-      }
-    };
-
-    $("btnNewCampaign").onclick = ()=>{
-      $("cName").value = "";
-      $("cPlatform").value = currentProject.platforms || "META";
-      $("cStore").value = currentProject.store || "勤美";
-      $("cProduct").value = currentProject.product || "";
-      $("cTheme").value = currentProject.theme || "";
-      $("cObjective").value = currentProject.objective || "MSG";
-      $("cStatus").value = currentProject.status || "規劃中";
-      $("cStart").value = currentProject.start_date || "";
-      $("cEnd").value = currentProject.end_date || "";
-      $("cBudget").value = "";
-      $("cmsg").textContent = "";
-      show(modalCampaign);
-    };
-
-    $("btnCreateCampaign").onclick = async ()=>{
-      const cmsg = $("cmsg");
-      cmsg.textContent = "";
-      const campaign_name = $("cName").value.trim();
-      if (!campaign_name){ cmsg.textContent="活動名稱必填"; return; }
-
-      try{
-        await createCampaign({
-          project_id: currentProject.id,
-          month_id: null,
-          platform: $("cPlatform").value.trim(),
-          store: $("cStore").value.trim(),
-          product: $("cProduct").value.trim(),
-          theme: $("cTheme").value.trim(),
-          objective: $("cObjective").value.trim(),
-          campaign_name,
-          start_date: $("cStart").value || null,
-          end_date: $("cEnd").value || null,
-          budget_note: $("cBudget").value.trim(),
-          status: $("cStatus").value.trim() || "規劃中"
-        });
-        hide(modalCampaign);
-        await renderCampaigns();
-        await renderLogs();
-      }catch(e){
-        cmsg.textContent="建立失敗：" + e.message;
-      }
-    };
-
-    $("btnCreateLog").onclick = async ()=>{
-      const lmsg = $("lmsg");
-      lmsg.textContent = "";
-      const cid = $("modalLog").dataset.cid;
-      if (!cid){ lmsg.textContent="請先從活動點『新增變更』"; return; }
-
-      try{
-        await createLog({
-          campaign_id: cid,
-          change_type: $("lType").value.trim() || "其他",
-          before: $("lBefore").value.trim(),
-          after: $("lAfter").value.trim(),
-          hypothesis: $("lHypo").value.trim(),
-        });
-        hide(modalLog);
-        $("lType").value=""; $("lBefore").value=""; $("lAfter").value=""; $("lHypo").value="";
-        await renderLogs();
-      }catch(e){
-        lmsg.textContent="儲存失敗：" + e.message;
-      }
-    };
-
-    // Router
-    window.addEventListener("hashchange", async ()=>{
-      const pid = parseHashProjectId();
-      try{
-        if (pid){
-          await loadProjectDetail(pid);
-        }else{
-          showListView();
-          await renderYears();
-          await renderProjects();
-        }
-      }catch(err){
-        showListView();
-        setSystemMsg("資料載入失敗（請檢查 Supabase Key / RLS / 網路）： " + err.message);
-      }
-    });
-
-    // Init（最重要：先固定 view，再做任何資料請求）
-    (async ()=>{
-      showListView(); // ✅ 先保證畫面一定合理
-      if (!hasKey()){
-        setSystemMsg("你尚未填入 SUPABASE_ANON_KEY（匿名金鑰）。請在 index.html 內貼上 anon public key 後再重新整理。");
-        return;
-      }
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-      try{
-        const pid = parseHashProjectId();
-        if (pid){
-          await loadProjectDetail(pid);
-        }else{
-          await renderYears();
-          await renderProjects();
-        }
-      }catch(err){
-        setSystemMsg("資料載入失敗（請檢查 Supabase Key / RLS / 網路）： " + err.message);
+        notice("載入失敗（Supabase/RLS/網路）： "+e.message);
       }
     })();
   </script>
