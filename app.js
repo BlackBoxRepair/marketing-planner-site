@@ -4,614 +4,397 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 /* ================================= */
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 const $ = (id) => document.getElementById(id);
+const esc = (s="") => String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
 
 function qs(name){
-  const url = new URL(window.location.href);
-  return url.searchParams.get(name);
+  const u = new URL(location.href);
+  return u.searchParams.get(name);
 }
 
-function setMsg(el, text){
-  if (!el) return;
-  el.textContent = text || "";
-}
+function show(el){ el.classList.remove("hidden"); }
+function hide(el){ el.classList.add("hidden"); }
 
-function ymLink(year_month){
-  return `./month.html?ym=${encodeURIComponent(year_month)}`;
-}
-
-async function fetchMonths(){
-  const { data, error } = await supabase
-    .from("months")
-    .select("*")
-    .order("year_month", { ascending: false });
-
+async function listProjects(year){
+  let q = supabase.from("projects").select("*").order("created_at",{ascending:false});
+  if (year && year !== "ALL") q = q.eq("year", Number(year));
+  const { data, error } = await q;
   if (error) throw error;
   return data || [];
 }
 
-async function upsertMonth({year_month, theme, notes}){
-  const { data, error } = await supabase
-    .from("months")
-    .upsert({ year_month, theme, notes }, { onConflict: "year_month" })
-    .select()
-    .single();
+async function listYears(){
+  const { data, error } = await supabase.from("projects").select("year").order("year",{ascending:false});
+  if (error) throw error;
+  const years = [...new Set((data||[]).map(x=>x.year).filter(Boolean))];
+  return years;
+}
 
+async function createProject(payload){
+  const { data, error } = await supabase.from("projects").insert(payload).select().single();
   if (error) throw error;
   return data;
 }
 
-async function updateMonthById(id, payload){
-  const { data, error } = await supabase
-    .from("months")
-    .update(payload)
-    .eq("id", id)
-    .select()
-    .single();
-
+async function getProject(id){
+  const { data, error } = await supabase.from("projects").select("*").eq("id", id).single();
   if (error) throw error;
   return data;
 }
 
-async function deleteMonthById(id){
-  const { error } = await supabase
-    .from("months")
-    .delete()
-    .eq("id", id);
-
-  if (error) throw error;
-}
-
-async function getMonthByYearMonth(year_month){
-  const { data, error } = await supabase
-    .from("months")
-    .select("*")
-    .eq("year_month", year_month)
-    .single();
-
+async function updateProject(id, payload){
+  const { data, error } = await supabase.from("projects").update(payload).eq("id", id).select().single();
   if (error) throw error;
   return data;
 }
 
-/* ===== Playbook weeks ===== */
-async function listWeeks(month_id){
-  const { data, error } = await supabase
-    .from("playbook_weeks")
-    .select("*")
-    .eq("month_id", month_id)
-    .order("week", { ascending: true });
-
+/* playbook */
+async function listWeeks(project_id){
+  const { data, error } = await supabase.from("playbook_weeks")
+    .select("*").eq("project_id", project_id).order("week",{ascending:true});
   if (error) throw error;
   return data || [];
 }
-
-async function createWeek(month_id, week){
-  const { data, error } = await supabase
-    .from("playbook_weeks")
-    .insert({ month_id, week })
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-async function updateWeek(id, payload){
-  const { data, error } = await supabase
-    .from("playbook_weeks")
-    .update(payload)
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-/* ===== Campaigns ===== */
-async function listCampaigns(month_id){
-  const { data, error } = await supabase
-    .from("campaigns")
-    .select("*")
-    .eq("month_id", month_id)
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data || [];
-}
-
-async function upsertCampaign(payload){
-  // If payload.id exists -> update, else insert
-  if (payload.id){
-    const id = payload.id;
-    delete payload.id;
-    const { data, error } = await supabase
-      .from("campaigns")
-      .update(payload)
-      .eq("id", id)
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
-  } else {
-    const { data, error } = await supabase
-      .from("campaigns")
-      .insert(payload)
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
+async function ensureWeeks(project_id){
+  const weeks = await listWeeks(project_id);
+  const have = new Set(weeks.map(w=>w.week));
+  const need = ["W1","W2","W3","W4"].filter(w=>!have.has(w));
+  for (const w of need){
+    await supabase.from("playbook_weeks").insert({ project_id, week: w });
   }
 }
-
-async function deleteCampaign(id){
-  const { error } = await supabase
-    .from("campaigns")
-    .delete()
-    .eq("id", id);
-
+async function saveWeek(id, focus, plan){
+  const { error } = await supabase.from("playbook_weeks").update({focus, plan}).eq("id", id);
   if (error) throw error;
 }
 
-/* ===== Change log ===== */
-async function listChangeLogsForMonth(month_id){
-  // join not used; fetch campaigns then logs
-  const campaigns = await listCampaigns(month_id);
-  const ids = campaigns.map(c => c.id);
-  if (!ids.length) return [];
-
-  const { data, error } = await supabase
-    .from("change_log")
-    .select("*")
-    .in("campaign_id", ids)
-    .order("timestamp", { ascending: false });
-
+/* campaigns */
+async function listCampaigns(project_id){
+  const { data, error } = await supabase.from("campaigns")
+    .select("*").eq("project_id", project_id).order("created_at",{ascending:false});
   if (error) throw error;
-
-  // attach campaign name
-  const map = new Map(campaigns.map(c => [c.id, c.campaign_name]));
-  return (data || []).map(r => ({...r, campaign_name: map.get(r.campaign_id) || ""}));
+  return data || [];
 }
-
-async function addChangeLog(payload){
-  const { data, error } = await supabase
-    .from("change_log")
-    .insert(payload)
-    .select()
-    .single();
-
+async function createCampaign(payload){
+  const { data, error } = await supabase.from("campaigns").insert(payload).select().single();
   if (error) throw error;
   return data;
 }
 
-async function deleteChangeLog(id){
-  const { error } = await supabase
-    .from("change_log")
-    .delete()
-    .eq("id", id);
-
+/* logs */
+async function listLogs(project_id){
+  const camps = await listCampaigns(project_id);
+  const ids = camps.map(c=>c.id);
+  if (!ids.length) return [];
+  const { data, error } = await supabase.from("change_log")
+    .select("*").in("campaign_id", ids).order("timestamp",{ascending:false});
   if (error) throw error;
+  const map = new Map(camps.map(c=>[c.id, c.campaign_name]));
+  return (data||[]).map(r=>({...r, campaign_name: map.get(r.campaign_id)||""}));
+}
+async function createLog(payload){
+  const { data, error } = await supabase.from("change_log").insert(payload).select().single();
+  if (error) throw error;
+  return data;
 }
 
 /* ========= UI ========= */
-function monthCard(m){
-  const div = document.createElement("div");
-  div.className = "item";
-  div.innerHTML = `
-    <div class="item-title">${m.year_month}｜${escapeHtml(m.theme)}</div>
-    <div class="item-sub">${escapeHtml(m.notes || "")}</div>
-    <div class="item-actions">
-      <a class="ghost" href="${ymLink(m.year_month)}">進入本月 →</a>
-    </div>
-  `;
-  return div;
-}
-
-function escapeHtml(str){
-  return String(str ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function weekItem(w){
-  const div = document.createElement("div");
-  div.className = "item";
-  div.innerHTML = `
-    <div class="row space-between">
-      <div>
-        <div class="item-title">${w.week}</div>
-        <div class="item-sub">Focus：${escapeHtml(w.focus || "")}</div>
-      </div>
-      <button class="ghost" data-action="saveWeek">儲存</button>
-    </div>
-    <div class="grid-3" style="margin-top:10px">
-      <label>
-        <span>Focus（測試/放大/優化/收斂）</span>
-        <input data-field="focus" value="${escapeHtml(w.focus || "")}" />
-      </label>
-      <label class="col-span-3">
-        <span>Plan（本週要做什麼）</span>
-        <input data-field="plan" value="${escapeHtml(w.plan || "")}" />
-      </label>
-    </div>
-    <div class="msg" data-msg></div>
-  `;
-
-  div.querySelector('[data-action="saveWeek"]').addEventListener("click", async () => {
-    const focus = div.querySelector('[data-field="focus"]').value.trim();
-    const plan = div.querySelector('[data-field="plan"]').value.trim();
-    const msg = div.querySelector("[data-msg]");
-    try{
-      await updateWeek(w.id, { focus, plan });
-      setMsg(msg, "已儲存 ✅");
-      setTimeout(()=>setMsg(msg,""), 1200);
-    }catch(e){
-      setMsg(msg, `儲存失敗：${e.message}`);
-    }
-  });
-
-  return div;
-}
-
-function campaignItem(c, onEdit, onDelete, onAddLog){
-  const div = document.createElement("div");
-  div.className = "item";
-
-  div.innerHTML = `
-    <div class="row space-between">
-      <div>
-        <div class="item-title">${escapeHtml(c.campaign_name)}</div>
-        <div class="item-sub">${escapeHtml(c.platform)}｜${escapeHtml(c.store)}｜${escapeHtml(c.product)}｜${escapeHtml(c.theme)}｜${escapeHtml(c.objective)}｜${escapeHtml(c.status)}</div>
-        <div class="item-sub">期間：${c.start_date || "-"} ～ ${c.end_date || "-"}</div>
-        <div class="item-sub">預算：${escapeHtml(c.budget_note || "")}</div>
-      </div>
-      <div class="item-actions">
-        <button class="ghost" data-act="edit">編輯</button>
-        <button class="ghost" data-act="log">新增變更</button>
-        <button class="danger" data-act="del">刪除</button>
-      </div>
-    </div>
-  `;
-
-  div.querySelector('[data-act="edit"]').addEventListener("click", ()=>onEdit(c));
-  div.querySelector('[data-act="del"]').addEventListener("click", ()=>onDelete(c));
-  div.querySelector('[data-act="log"]').addEventListener("click", ()=>onAddLog(c));
-
-  return div;
-}
-
-function logItem(l, onDelete){
-  const div = document.createElement("div");
-  div.className = "item";
-  const dt = new Date(l.timestamp);
-  div.innerHTML = `
-    <div class="row space-between">
-      <div>
-        <div class="item-title">${escapeHtml(l.campaign_name)}｜${escapeHtml(l.change_type)}</div>
-        <div class="item-sub">${dt.toLocaleString()}</div>
-        <div class="item-sub">Before：${escapeHtml(l.before || "")}</div>
-        <div class="item-sub">After：${escapeHtml(l.after || "")}</div>
-        <div class="item-sub">原因/假設：${escapeHtml(l.hypothesis || "")}</div>
-      </div>
-      <button class="danger" data-act="del">刪除</button>
-    </div>
-  `;
-  div.querySelector('[data-act="del"]').addEventListener("click", ()=>onDelete(l));
-  return div;
-}
-
-/* ========= Public API ========= */
 const Planner = {
-  async initIndex(){
-    const msg = $("msg");
-    const list = $("monthsList");
-    const btn = $("btnCreateMonth");
-    const btnRefresh = $("btnRefresh");
+  async initProjectsIndex(){
+    const grid = $("grid");
+    const yearPill = $("yearPill");
+    const dropdown = $("yearDropdown");
+    const yearOptions = $("yearOptions");
 
-    const render = async () => {
-      list.innerHTML = "";
+    let currentYear = "ALL";
+
+    const renderYears = async ()=>{
+      const years = await listYears();
+      yearOptions.innerHTML = years.map(y=>`<div class="dropdown-item" data-year="${y}">${y}</div>`).join("");
+      dropdown.querySelectorAll(".dropdown-item").forEach(el=>{
+        el.onclick = async ()=>{
+          currentYear = el.dataset.year;
+          hide(dropdown);
+          await render();
+        };
+      });
+    };
+
+    const render = async ()=>{
+      const projects = await listProjects(currentYear);
+      grid.innerHTML = projects.map(p=>{
+        return `
+          <div class="card" data-id="${p.id}">
+            <div class="big">${esc(p.title)}</div>
+            <div class="meta">
+              ${esc(p.year)}｜${esc(p.product||"")}｜${esc(p.theme||"")}<br/>
+              ${esc(p.platforms||"")}｜${esc(p.store||"")}｜${esc(p.objective||"")}<br/>
+              狀態：${esc(p.status||"")}
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      grid.querySelectorAll(".card").forEach(c=>{
+        c.onclick = ()=> location.href = `./project.html?id=${encodeURIComponent(c.dataset.id)}`;
+      });
+    };
+
+    yearPill.onclick = async ()=>{
+      dropdown.classList.contains("hidden") ? show(dropdown) : hide(dropdown);
+    };
+
+    // 新增專案 modal
+    const modal = $("modal");
+    $("btnOpenNewProject").onclick = ()=>show(modal);
+    $("btnCloseModal").onclick = ()=>hide(modal);
+
+    $("btnCreateProject").onclick = async ()=>{
+      const msg = $("msg");
+      msg.textContent = "";
+
+      const year = Number($("pYear").value.trim());
+      const title = $("pTitle").value.trim();
+      const product = $("pProduct").value;
+      const theme = $("pTheme").value.trim();
+      const platforms = $("pPlatforms").value;
+      const store = $("pStore").value;
+      const objective = $("pObjective").value;
+      const status = $("pStatus").value;
+      const start_date = $("pStart").value || null;
+      const end_date = $("pEnd").value || null;
+      const notes = $("pNotes").value.trim();
+
+      if (!year || year < 2000){ msg.textContent = "年度請填正確（例如 2026）"; return; }
+      if (!title){ msg.textContent = "專案名稱必填"; return; }
+
       try{
-        const months = await fetchMonths();
-        if (!months.length){
-          list.innerHTML = `<div class="item"><div class="item-title">目前還沒有月份</div><div class="item-sub">先在上方新增一個月份吧。</div></div>`;
-          return;
-        }
-        months.forEach(m => list.appendChild(monthCard(m)));
+        await createProject({ year, title, product, theme, platforms, store, objective, status, start_date, end_date, notes });
+        hide(modal);
+        await renderYears();
+        await render();
       }catch(e){
-        list.innerHTML = `<div class="item"><div class="item-title">讀取失敗</div><div class="item-sub">${escapeHtml(e.message)}</div></div>`;
+        msg.textContent = "建立失敗：" + e.message;
       }
     };
 
-    btn.addEventListener("click", async ()=>{
-      const year_month = $("yearMonth").value.trim();
-      const theme = $("theme").value.trim();
-      const notes = $("notes").value.trim();
-
-      if (!/^\d{4}-\d{2}$/.test(year_month)){
-        setMsg(msg, "月份格式請用 YYYY-MM（例如 2026-03）");
-        return;
-      }
-      if (!theme){
-        setMsg(msg, "請填主題（Theme）");
-        return;
-      }
-
-      try{
-        await upsertMonth({ year_month, theme, notes });
-        $("yearMonth").value = "";
-        $("theme").value = "";
-        $("notes").value = "";
-        setMsg(msg, "新增成功 ✅");
-        setTimeout(()=>setMsg(msg,""), 1200);
-        await render();
-      }catch(e){
-        setMsg(msg, `新增失敗：${e.message}`);
-      }
+    // 點外面關 dropdown
+    document.addEventListener("click",(e)=>{
+      if (!dropdown.contains(e.target) && e.target !== yearPill) hide(dropdown);
     });
 
-    btnRefresh.addEventListener("click", render);
+    await renderYears();
     await render();
   },
 
-  async initMonth(){
-    const ym = qs("ym");
-    if (!ym){
-      alert("缺少 ym 參數，請從月份列表進入。");
-      window.location.href = "./index.html";
-      return;
-    }
+  async initProjectDetail(){
+    const id = qs("id");
+    if (!id){ location.href="./index.html"; return; }
 
-    // UI refs
-    const msgMonth = $("msgMonth");
-    const weeksList = $("weeksList");
-    const campaignsList = $("campaignsList");
-    const logList = $("logList");
+    let project = await getProject(id);
 
-    let month = null;
+    // fill
+    $("ptitle").textContent = project.title;
 
-    const setTitle = () => {
-      $("pageTitle").textContent = `${month.year_month}｜${month.theme}`;
-      $("pageSub").textContent = `第二層：W1~W4 節奏 + 活動 + 變更紀錄（${month.year_month}）`;
-    };
+    $("fYear").value = project.year || "";
+    $("fTitle").value = project.title || "";
+    $("fProduct").value = project.product || "";
+    $("fTheme").value = project.theme || "";
+    $("fPlatforms").value = project.platforms || "";
+    $("fStore").value = project.store || "";
+    $("fObjective").value = project.objective || "";
+    $("fStatus").value = project.status || "";
+    $("fStart").value = project.start_date || "";
+    $("fEnd").value = project.end_date || "";
+    $("fNotes").value = project.notes || "";
 
-    const load = async () => {
-      try{
-        month = await getMonthByYearMonth(ym);
-        $("mYearMonth").value = month.year_month;
-        $("mTheme").value = month.theme || "";
-        $("mNotes").value = month.notes || "";
-        setTitle();
-      }catch(e){
-        alert(`讀取月份失敗：${e.message}`);
-        window.location.href = "./index.html";
+    const renderWeeks = async ()=>{
+      const weeks = await listWeeks(project.id);
+      const wrap = $("weeks");
+      if (!weeks.length){
+        wrap.innerHTML = `<div class="item"><div><div class="t">尚未建立 W1~W4</div><div class="s">點上方「一鍵建立 W1~W4」。</div></div></div>`;
         return;
       }
+      wrap.innerHTML = "";
+      weeks.forEach(w=>{
+        const el = document.createElement("div");
+        el.className = "item";
+        el.innerHTML = `
+          <div>
+            <div class="t">${w.week}</div>
+            <div class="s">Focus：<input data-f="focus" value="${esc(w.focus||"")}" /></div>
+            <div class="s">Plan：<input data-f="plan" value="${esc(w.plan||"")}" /></div>
+          </div>
+          <div class="actions">
+            <button class="pill" data-save>儲存</button>
+          </div>
+        `;
+        el.querySelector("[data-save]").onclick = async ()=>{
+          const focus = el.querySelector('[data-f="focus"]').value.trim();
+          const plan = el.querySelector('[data-f="plan"]').value.trim();
+          await saveWeek(w.id, focus, plan);
+        };
+        wrap.appendChild(el);
+      });
+    };
 
+    const renderCampaigns = async ()=>{
+      const list = await listCampaigns(project.id);
+      const wrap = $("campaigns");
+      if (!list.length){
+        wrap.innerHTML = `<div class="item"><div><div class="t">尚未建立活動</div><div class="s">點右上「新增活動」。</div></div></div>`;
+        return;
+      }
+      wrap.innerHTML = "";
+      list.forEach(c=>{
+        const el = document.createElement("div");
+        el.className = "item";
+        el.innerHTML = `
+          <div>
+            <div class="t">${esc(c.campaign_name)}</div>
+            <div class="s">${esc(c.platform)}｜${esc(c.store)}｜${esc(c.product)}｜${esc(c.theme)}｜${esc(c.objective)}｜${esc(c.status)}</div>
+            <div class="s">期間：${c.start_date||"-"} ～ ${c.end_date||"-"}</div>
+            <div class="s">預算：${esc(c.budget_note||"")}</div>
+          </div>
+          <div class="actions">
+            <button class="pill" data-log>新增變更</button>
+          </div>
+        `;
+        el.querySelector("[data-log]").onclick = ()=>{
+          $("lModal").dataset.cid = c.id;
+          show($("lModal"));
+        };
+        wrap.appendChild(el);
+      });
+    };
+
+    const renderLogs = async ()=>{
+      const list = await listLogs(project.id);
+      const wrap = $("logs");
+      if (!list.length){
+        wrap.innerHTML = `<div class="item"><div><div class="t">目前沒有變更紀錄</div><div class="s">在活動點「新增變更」即可。</div></div></div>`;
+        return;
+      }
+      wrap.innerHTML = "";
+      list.forEach(l=>{
+        const el = document.createElement("div");
+        el.className = "item";
+        el.innerHTML = `
+          <div>
+            <div class="t">${esc(l.campaign_name)}｜${esc(l.change_type)}</div>
+            <div class="s">${new Date(l.timestamp).toLocaleString()}</div>
+            <div class="s">Before：${esc(l.before||"")}</div>
+            <div class="s">After：${esc(l.after||"")}</div>
+            <div class="s">原因/假設：${esc(l.hypothesis||"")}</div>
+          </div>
+        `;
+        wrap.appendChild(el);
+      });
+    };
+
+    $("btnInitWeeks").onclick = async ()=>{
+      await ensureWeeks(project.id);
       await renderWeeks();
-      await renderCampaigns();
-      await renderLogs();
     };
 
-    const renderWeeks = async () => {
-      weeksList.innerHTML = "";
+    $("btnSaveProject").onclick = async ()=>{
+      const pmsg = $("pmsg");
+      pmsg.textContent = "";
       try{
-        const weeks = await listWeeks(month.id);
-        if (!weeks.length){
-          weeksList.innerHTML = `<div class="item"><div class="item-title">尚未建立 W1~W4</div><div class="item-sub">點上方「一鍵建立 W1~W4」。</div></div>`;
-          return;
-        }
-        weeks.forEach(w => weeksList.appendChild(weekItem(w)));
-      }catch(e){
-        weeksList.innerHTML = `<div class="item"><div class="item-title">讀取失敗</div><div class="item-sub">${escapeHtml(e.message)}</div></div>`;
-      }
-    };
-
-    const renderCampaigns = async () => {
-      campaignsList.innerHTML = "";
-      try{
-        const campaigns = await listCampaigns(month.id);
-        if (!campaigns.length){
-          campaignsList.innerHTML = `<div class="item"><div class="item-title">尚未建立活動</div><div class="item-sub">點「新增活動」建立本月投放活動。</div></div>`;
-          return;
-        }
-
-        campaigns.forEach(c => {
-          campaignsList.appendChild(
-            campaignItem(
-              c,
-              (c)=>openCampaignModal(c),
-              async (c)=>{
-                if (!confirm(`確定刪除活動？\n${c.campaign_name}`)) return;
-                try{
-                  await deleteCampaign(c.id);
-                  await renderCampaigns();
-                  await renderLogs();
-                }catch(e){
-                  alert(`刪除失敗：${e.message}`);
-                }
-              },
-              (c)=>openLogModal(c)
-            )
-          );
+        project = await updateProject(project.id, {
+          year: Number($("fYear").value),
+          title: $("fTitle").value.trim(),
+          product: $("fProduct").value.trim(),
+          theme: $("fTheme").value.trim(),
+          platforms: $("fPlatforms").value.trim(),
+          store: $("fStore").value.trim(),
+          objective: $("fObjective").value.trim(),
+          status: $("fStatus").value.trim(),
+          start_date: $("fStart").value || null,
+          end_date: $("fEnd").value || null,
+          notes: $("fNotes").value.trim(),
         });
-
+        $("ptitle").textContent = project.title;
+        pmsg.textContent = "已儲存 ✅";
+        setTimeout(()=>pmsg.textContent="",1200);
       }catch(e){
-        campaignsList.innerHTML = `<div class="item"><div class="item-title">讀取失敗</div><div class="item-sub">${escapeHtml(e.message)}</div></div>`;
+        pmsg.textContent = "儲存失敗：" + e.message;
       }
     };
 
-    const renderLogs = async () => {
-      logList.innerHTML = "";
-      try{
-        const logs = await listChangeLogsForMonth(month.id);
-        if (!logs.length){
-          logList.innerHTML = `<div class="item"><div class="item-title">目前沒有變更紀錄</div><div class="item-sub">在活動卡片點「新增變更」即可新增。</div></div>`;
-          return;
-        }
-        logs.forEach(l => logList.appendChild(logItem(l, async (l)=>{
-          if (!confirm("確定刪除此變更紀錄？")) return;
-          try{
-            await deleteChangeLog(l.id);
-            await renderLogs();
-          }catch(e){
-            alert(`刪除失敗：${e.message}`);
-          }
-        })));
-      }catch(e){
-        logList.innerHTML = `<div class="item"><div class="item-title">讀取失敗</div><div class="item-sub">${escapeHtml(e.message)}</div></div>`;
-      }
+    // campaign modal
+    const cModal = $("cModal");
+    $("btnNewCampaign").onclick = ()=>{
+      $("cName").value = "";
+      $("cPlatform").value = project.platforms || "META";
+      $("cStore").value = project.store || "勤美";
+      $("cProduct").value = project.product || "";
+      $("cTheme").value = project.theme || "";
+      $("cObjective").value = project.objective || "MSG";
+      $("cStatus").value = project.status || "規劃中";
+      $("cStart").value = project.start_date || "";
+      $("cEnd").value = project.end_date || "";
+      $("cBudget").value = "";
+      $("cmsg").textContent = "";
+      show(cModal);
     };
+    $("btnCloseCModal").onclick = ()=>hide(cModal);
 
-    // month actions
-    $("btnSaveMonth").addEventListener("click", async ()=>{
+    $("btnCreateCampaign").onclick = async ()=>{
+      const cmsg = $("cmsg");
+      cmsg.textContent = "";
+      const campaign_name = $("cName").value.trim();
+      if (!campaign_name){ cmsg.textContent="活動名稱必填"; return; }
       try{
-        const theme = $("mTheme").value.trim();
-        const notes = $("mNotes").value.trim();
-        if (!theme){
-          setMsg(msgMonth, "主題不能為空");
-          return;
-        }
-        month = await updateMonthById(month.id, { theme, notes });
-        setTitle();
-        setMsg(msgMonth, "已儲存 ✅");
-        setTimeout(()=>setMsg(msgMonth,""), 1200);
-      }catch(e){
-        setMsg(msgMonth, `儲存失敗：${e.message}`);
-      }
-    });
-
-    $("btnDeleteMonth").addEventListener("click", async ()=>{
-      if (!confirm(`確定刪除此月份？\n${month.year_month}`)) return;
-      try{
-        await deleteMonthById(month.id);
-        alert("已刪除");
-        window.location.href = "./index.html";
-      }catch(e){
-        alert(`刪除失敗：${e.message}`);
-      }
-    });
-
-    $("btnRefreshMonth").addEventListener("click", load);
-
-    $("btnInitWeeks").addEventListener("click", async ()=>{
-      try{
-        const existing = await listWeeks(month.id);
-        const need = ["W1","W2","W3","W4"].filter(w => !existing.some(x => x.week === w));
-        for (const w of need){
-          await createWeek(month.id, w);
-        }
-        await renderWeeks();
-      }catch(e){
-        alert(`建立失敗：${e.message}`);
-      }
-    });
-
-    // Campaign modal
-    const modal = $("modal");
-    const modalMsg = $("modalMsg");
-    const openModal = () => modal.classList.remove("hidden");
-    const closeModal = () => modal.classList.add("hidden");
-
-    $("modalClose").addEventListener("click", closeModal);
-    $("btnNewCampaign").addEventListener("click", ()=>openCampaignModal(null));
-
-    const openCampaignModal = (c) => {
-      setMsg(modalMsg, "");
-      $("cId").value = c?.id || "";
-      $("modalTitle").textContent = c ? "編輯活動" : "新增活動";
-
-      $("cPlatform").value = c?.platform || "META";
-      $("cStore").value = c?.store || "勤美";
-      $("cProduct").value = c?.product || "電池更換";
-      $("cTheme").value = c?.theme || month.theme || "";
-      $("cObjective").value = c?.objective || "MSG";
-      $("cName").value = c?.campaign_name || "";
-      $("cStart").value = c?.start_date || "";
-      $("cEnd").value = c?.end_date || "";
-      $("cBudget").value = c?.budget_note || "";
-      $("cStatus").value = c?.status || "規劃中";
-
-      openModal();
-    };
-
-    $("modalSave").addEventListener("click", async ()=>{
-      const id = $("cId").value.trim() || null;
-
-      const payload = {
-        month_id: month.id,
-        platform: $("cPlatform").value,
-        store: $("cStore").value,
-        product: $("cProduct").value,
-        theme: $("cTheme").value.trim(),
-        objective: $("cObjective").value,
-        campaign_name: $("cName").value.trim(),
-        start_date: $("cStart").value || null,
-        end_date: $("cEnd").value || null,
-        budget_note: $("cBudget").value.trim(),
-        status: $("cStatus").value
-      };
-
-      if (!payload.theme){
-        setMsg(modalMsg, "主題（Theme）必填");
-        return;
-      }
-      if (!payload.campaign_name){
-        setMsg(modalMsg, "活動名稱必填");
-        return;
-      }
-      if (id) payload.id = id;
-
-      try{
-        await upsertCampaign(payload);
-        closeModal();
+        await createCampaign({
+          project_id: project.id,
+          month_id: null,
+          platform: $("cPlatform").value.trim(),
+          store: $("cStore").value.trim(),
+          product: $("cProduct").value.trim(),
+          theme: $("cTheme").value.trim(),
+          objective: $("cObjective").value.trim(),
+          campaign_name,
+          start_date: $("cStart").value || null,
+          end_date: $("cEnd").value || null,
+          budget_note: $("cBudget").value.trim(),
+          status: $("cStatus").value.trim() || "規劃中"
+        });
+        hide(cModal);
         await renderCampaigns();
-        await renderLogs();
       }catch(e){
-        setMsg(modalMsg, `儲存失敗：${e.message}`);
+        cmsg.textContent="建立失敗：" + e.message;
       }
-    });
-
-    // Log modal
-    const logModal = $("logModal");
-    const logMsg = $("logMsg");
-    const openLog = () => logModal.classList.remove("hidden");
-    const closeLog = () => logModal.classList.add("hidden");
-
-    $("logClose").addEventListener("click", closeLog);
-
-    const openLogModal = (c) => {
-      setMsg(logMsg, "");
-      $("lCampaignId").value = c.id;
-      $("lType").value = "預算";
-      $("lBefore").value = "";
-      $("lAfter").value = "";
-      $("lHypo").value = "";
-      openLog();
     };
 
-    $("logSave").addEventListener("click", async ()=>{
-      const campaign_id = $("lCampaignId").value;
-      const payload = {
-        campaign_id,
-        change_type: $("lType").value,
-        before: $("lBefore").value.trim(),
-        after: $("lAfter").value.trim(),
-        hypothesis: $("lHypo").value.trim(),
-      };
+    // log modal
+    const lModal = $("lModal");
+    $("btnCloseLModal").onclick = ()=>hide(lModal);
+
+    $("btnCreateLog").onclick = async ()=>{
+      const lmsg = $("lmsg");
+      lmsg.textContent = "";
+      const cid = lModal.dataset.cid;
+      if (!cid){ lmsg.textContent="請先從活動點『新增變更』"; return; }
       try{
-        await addChangeLog(payload);
-        closeLog();
+        await createLog({
+          campaign_id: cid,
+          change_type: $("lType").value.trim() || "其他",
+          before: $("lBefore").value.trim(),
+          after: $("lAfter").value.trim(),
+          hypothesis: $("lHypo").value.trim(),
+        });
+        hide(lModal);
+        $("lType").value=""; $("lBefore").value=""; $("lAfter").value=""; $("lHypo").value="";
         await renderLogs();
       }catch(e){
-        setMsg(logMsg, `儲存失敗：${e.message}`);
+        lmsg.textContent="儲存失敗：" + e.message;
       }
-    });
+    };
 
-    await load();
+    await renderWeeks();
+    await renderCampaigns();
+    await renderLogs();
   }
 };
 
