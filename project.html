@@ -9,14 +9,14 @@
 </head>
 <body>
   <header class="topbar">
-  <div class="title-block">
-    <div class="kicker">PROJECT</div>
-    <h1 class="title" id="ptitle">專案</h1>
-  </div>
-  <div class="right">
-    <a class="pill" href="./index.html">回選單</a>
-  </div>
-</header>
+    <div class="title-block">
+      <div class="kicker">PROJECT</div>
+      <h1 class="title" id="ptitle">專案</h1>
+    </div>
+    <div class="right">
+      <a class="pill" href="./index.html">回選單</a>
+    </div>
+  </header>
 
   <main class="page">
     <section class="panel">
@@ -32,12 +32,15 @@
         <label><div class="label">年度</div><input id="fYear" type="number" /></label>
         <label><div class="label">專案名稱</div><input id="fTitle" /></label>
         <label><div class="label">品項</div><input id="fProduct" /></label>
+
         <label><div class="label">主題</div><input id="fTheme" /></label>
         <label><div class="label">平台</div><input id="fPlatforms" /></label>
         <label><div class="label">門市</div><input id="fStore" /></label>
+
         <label><div class="label">目標</div><input id="fObjective" /></label>
         <label><div class="label">狀態</div><input id="fStatus" /></label>
         <label><div class="label">開始日</div><input id="fStart" type="date" /></label>
+
         <label><div class="label">結束日</div><input id="fEnd" type="date" /></label>
         <label class="full"><div class="label">備註</div><input id="fNotes" /></label>
       </div>
@@ -55,7 +58,7 @@
     <section class="panel">
       <div class="panel-head">
         <div class="panel-title">活動（Campaigns）</div>
-        <button id="btnNewCampaign" class="pill pill-white">新增活動</button>
+        <button id="btnNewCampaign" class="pill">新增活動</button>
       </div>
       <div id="campaigns" class="stack"></div>
     </section>
@@ -68,7 +71,7 @@
     </section>
   </main>
 
-  <!-- 新增活動 Modal（簡版） -->
+  <!-- 新增活動 Modal -->
   <div id="cModal" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">
@@ -78,22 +81,27 @@
 
       <div class="form">
         <label><div class="label">活動名稱</div><input id="cName" placeholder="例如 META_KM_BAT_SPR_MSG_202603" /></label>
+
         <div class="form-row">
           <label><div class="label">平台</div><input id="cPlatform" placeholder="META/GOOGLE" /></label>
           <label><div class="label">門市</div><input id="cStore" placeholder="勤美/沙鹿" /></label>
         </div>
+
         <div class="form-row">
           <label><div class="label">品項</div><input id="cProduct" placeholder="電池更換/資料救援..." /></label>
           <label><div class="label">主題</div><input id="cTheme" placeholder="春天/沙灘/中秋" /></label>
         </div>
+
         <div class="form-row">
           <label><div class="label">目標</div><input id="cObjective" placeholder="MSG/LEAD/CALL" /></label>
           <label><div class="label">狀態</div><input id="cStatus" placeholder="規劃中/投放中/結案" /></label>
         </div>
+
         <div class="form-row">
           <label><div class="label">開始日</div><input id="cStart" type="date" /></label>
           <label><div class="label">結束日</div><input id="cEnd" type="date" /></label>
         </div>
+
         <label><div class="label">預算備註</div><input id="cBudget" placeholder="每日 300 / 放大到 360" /></label>
 
         <div class="actions">
@@ -117,6 +125,7 @@
           <label><div class="label">改動類型</div><input id="lType" placeholder="預算/素材/文案..." /></label>
           <label><div class="label">Before</div><input id="lBefore" /></label>
         </div>
+
         <div class="form-row">
           <label><div class="label">After</div><input id="lAfter" /></label>
           <label><div class="label">原因/假設</div><input id="lHypo" /></label>
