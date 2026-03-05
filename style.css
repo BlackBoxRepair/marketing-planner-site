@@ -247,11 +247,15 @@ input:focus, select:focus{
   position: fixed;
   inset: 0;
   background: rgba(17,17,17,.22);
-  display:flex;
-  align-items:center;
-  justify-content:center;
+
+  display: flex;
+  align-items: flex-start;   /* ✅ 不要硬置中，避免被頂部吃掉 */
+  justify-content: center;
+
   padding: 18px;
+  overflow: auto;            /* ✅ modal 背景可捲 */
 }
+
 .modal-card{
   width: min(920px, 100%);
   background: var(--paper);
@@ -259,6 +263,11 @@ input:focus, select:focus{
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow);
   padding: 18px;
+
+  margin-top: 70px;          /* ✅ 預留頂部空間（可改 56/64/80） */
+  max-height: calc(100vh - 120px); /* ✅ 卡片不超出視窗 */
+  overflow: auto;            /* ✅ 卡片內部可捲 */
+  -webkit-overflow-scrolling: touch; /* ✅ Mac/iOS 捲動更順 */
 }
 .modal-head{
   display:flex;
