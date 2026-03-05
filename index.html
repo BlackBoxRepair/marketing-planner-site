@@ -5,448 +5,145 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>黑盒子｜行銷廣告專案計劃表</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
-    :root {
-      --brand: #AE8E53;
-      --bg: #F6F5F2;
-      --paper: #fff;
-      --paper2: #FBFAF8;
-      --text: #151515;
-      --muted: rgba(21,21,21,.58);
-      --line: rgba(21,21,21,.10);
-      --shadow: 0 12px 32px rgba(0,0,0,.08);
-      --r: 22px;
-      --focus: rgba(174,142,83,.22);
-    }
+    :root { --brand: #AE8E53; --bg: #F6F5F2; --paper: #fff; --text: #151515; --muted: rgba(21,21,21,.58); --line: rgba(21,21,21,.10); --r: 22px; }
     * { box-sizing: border-box; }
-    html, body { margin: 0; }
-    body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, "PingFang TC", "Microsoft JhengHei", Arial; letter-spacing: .2px; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, "PingFang TC", sans-serif; margin: 0; }
     .hidden { display: none !important; }
-
-    header {
-      position: sticky; top: 0; z-index: 20;
-      background: rgba(246,245,242,0.92); backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--line);
-      padding: 16px 18px; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px;
-    }
-    .kicker { font-size: 12px; letter-spacing: .22em; font-weight: 900; color: var(--brand); }
-    h1 { margin: 6px 0 0; font-size: 28px; font-weight: 900; }
-    .btn {
-      border: 1px solid var(--line); background: rgba(255,255,255,.9);
-      padding: 10px 14px; border-radius: 999px; font-weight: 900; cursor: pointer;
-      box-shadow: 0 8px 16px rgba(0,0,0,.06); transition: .12s;
-    }
-    .btn:hover { transform: translateY(-1px); }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
-    .btn.ghost { background: transparent; box-shadow: none; }
-
-    main { max-width: 1100px; margin: 0 auto; padding: 18px 18px 60px; }
-    .notice { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 12px; box-shadow: 0 8px 20px rgba(0,0,0,.06); margin: 10px 0 16px; color: var(--brand); font-weight: bold; text-align: center; }
-    .bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 6px 0 16px; }
-    select, input {
-      width: 100%; padding: 12px 12px; border-radius: 16px; border: 1px solid var(--line);
-      background: var(--paper2); outline: none; font-size: 14px; transition: .12s;
-    }
-    select:focus, input:focus { background: #fff; border-color: rgba(174,142,83,.45); box-shadow: 0 0 0 4px var(--focus); }
-    
-    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
-    @media (max-width: 980px) { .grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 520px) { .grid { grid-template-columns: 1fr; } }
-
-    .card {
-      background: var(--paper); border: 1px solid rgba(21,21,21,.06); border-radius: var(--r);
-      padding: 16px; box-shadow: 0 10px 24px rgba(0,0,0,.06); cursor: pointer; min-height: 160px;
-      display: flex; flex-direction: column; justify-content: space-between; transition: .2s;
-    }
-    .card:hover { transform: scale(1.02); }
-    .card .title { font-size: 18px; font-weight: 950; line-height: 1.2; }
-    .card .meta { margin-top: 10px; font-size: 12px; color: var(--muted); line-height: 1.55; }
-
-    .box { background: var(--paper); border: 1px solid rgba(21,21,21,.06); border-radius: var(--r); padding: 16px; box-shadow: 0 10px 24px rgba(0,0,0,.06); margin: 12px 0; }
-    .boxhead { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
-    .boxhead .h { font-weight: 950; font-size: 18px; }
-    .stack { display: flex; flex-direction: column; gap: 10px; }
-    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-    .item { border: 1px solid rgba(21,21,21,.08); border-radius: 16px; padding: 12px; background: #fff; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-    .item .t { font-weight: 950; }
-    .item .s { margin-top: 6px; font-size: 12px; color: var(--muted); line-height: 1.55; }
-    .muted { font-size: 12px; color: var(--muted); }
-
-    .modal { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,.22); display: flex; align-items: center; justify-content: center; padding: 16px; }
-    .modalcard { width: min(900px, 100%); max-height: calc(100vh - 32px); overflow: auto; background: #fff; border-radius: var(--r); box-shadow: var(--shadow); padding: 24px; }
-    .modalhead { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
-    label span { display: block; font-size: 12px; color: rgba(21,21,21,.55); font-weight: 900; margin-bottom: 6px; }
-    .formgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-    @media (max-width: 900px) { .formgrid { grid-template-columns: 1fr; } }
-    .full { grid-column: 1/-1; }
+    header { position: sticky; top: 0; z-index: 20; background: rgba(246,245,242,0.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); padding: 16px; display: flex; justify-content: space-between; align-items: center; }
+    h1 { margin: 0; font-size: 24px; font-weight: 900; }
+    .btn { border: 1px solid var(--line); background: #fff; padding: 10px 16px; border-radius: 999px; font-weight: 900; cursor: pointer; transition: .12s; }
+    .btn.primary { background: var(--brand); color: #fff; border-color: var(--brand); }
+    main { max-width: 1100px; margin: 0 auto; padding: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
+    .card { background: #fff; padding: 20px; border-radius: var(--r); border: 1px solid var(--line); cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,.05); }
+    .modal { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .modal-card { background: #fff; width: 100%; max-width: 800px; border-radius: var(--r); padding: 24px; max-height: 90vh; overflow-y: auto; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } }
+    label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 900; color: var(--muted); }
+    input, select { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--line); outline: none; }
+    .notice { background: var(--brand); color: #fff; padding: 12px; border-radius: 12px; margin-bottom: 16px; text-align: center; font-weight: bold; }
   </style>
 </head>
-
 <body>
+
   <header>
-    <div>
-      <div class="kicker" id="kicker">MARKETING</div>
-      <h1 id="topTitle">廣告專案計畫表</h1>
-    </div>
-    <div class="row">
-      <button id="btnBack" class="btn ghost hidden">回選單</button>
+    <h1>廣告專案計畫表</h1>
+    <div style="display:flex; gap:10px;">
+      <button id="btnBack" class="btn hidden">回首頁</button>
       <button id="btnNewProject" class="btn primary">新增專案</button>
     </div>
   </header>
 
   <main>
     <div id="sysMsg" class="notice hidden"></div>
-
+    
     <section id="viewList">
-      <div class="bar">
-        <select id="yearSelect"><option value="ALL">全部年度</option></select>
-      </div>
-      <div id="grid" class="grid"></div>
+      <div id="grid" class="grid">正在載入專案...</div>
     </section>
 
     <section id="viewDetail" class="hidden">
-      <section class="box">
-        <div class="boxhead">
-          <div class="h">專案資訊</div>
-          <div class="row">
-            <button id="btnInitWeeks" class="btn">一鍵建立 W1~W4</button>
-            <button id="btnSaveProject" class="btn primary">儲存變更</button>
-          </div>
-        </div>
-        <div class="formgrid">
-          <label><span>年度</span><input id="fYear" type="number"></label>
-          <label class="full"><span>專案名稱</span><input id="fTitle"></label>
-          <label><span>品項</span><input id="fProduct"></label>
-          <label><span>主題</span><input id="fTheme"></label>
-          <label><span>平台</span><input id="fPlatforms"></label>
-          <label><span>門市</span><input id="fStore"></label>
-          <label><span>目標</span><input id="fObjective"></label>
-          <label><span>狀態</span><input id="fStatus"></label>
-          <label><span>開始日</span><input id="fStart" type="date"></label>
-          <label><span>結束日</span><input id="fEnd" type="date"></label>
-          <label class="full"><span>備註</span><input id="fNotes"></label>
-        </div>
-        <div id="pmsg" class="muted" style="margin-top:10px"></div>
-      </section>
-
-      <section class="box">
-        <div class="boxhead"><div class="h">W1~W4 投放節奏</div></div>
-        <div id="weeks" class="stack"></div>
-      </section>
-
-      <section class="box">
-        <div class="boxhead">
-          <div class="h">廣告活動（Campaigns）</div>
-          <button id="btnNewCampaign" class="btn">新增活動</button>
-        </div>
-        <div id="campaigns" class="stack"></div>
-      </section>
-
-      <section class="box">
-        <div class="boxhead"><div class="h">變更紀錄 (Change Log)</div></div>
-        <div id="logs" class="stack"></div>
-      </section>
+      <div style="background:#fff; padding:20px; border-radius:var(--r); border:1px solid var(--line);">
+        <h3>專案詳情</h3>
+        <div id="detailFields" class="form-grid">
+            </div>
+        <button id="btnSaveProject" class="btn primary" style="margin-top:20px;">儲存變更</button>
+      </div>
     </section>
   </main>
 
   <div id="mProject" class="modal hidden">
-    <div class="modalcard">
-      <div class="modalhead"><div class="h">新增專案</div><button class="btn" onclick="hide(mProject)">關閉</button></div>
-      <div class="formgrid">
-        <label><span>年度</span><input id="pYear" type="number" value="2026"></label>
-        <label class="full"><span>專案名稱</span><input id="pTitle" placeholder="例如：春季｜電池更換｜訊息主力"></label>
-        <label><span>品項</span><input id="pProduct" placeholder="電池更換/螢幕維修"></label>
-        <label><span>主題</span><input id="pTheme" placeholder="春天/開學季"></label>
-        <label><span>平台</span><input id="pPlatforms" placeholder="META/GOOGLE"></label>
-        <label><span>門市</span><input id="pStore" placeholder="勤美/沙鹿"></label>
-        <label><span>目標</span><input id="pObjective" placeholder="MSG/CALL"></label>
-        <label><span>狀態</span><input id="pStatus" value="規劃中"></label>
-        <label><span>開始日</span><input id="pStart" type="date"></label>
-        <label><span>結束日</span><input id="pEnd" type="date"></label>
-        <label class="full"><span>備註</span><input id="pNotes"></label>
+    <div class="modal-card">
+      <h2>建立新廣告專案</h2>
+      <div class="form-grid">
+        <div><label>年度</label><input id="pYear" type="number" value="2026"></div>
+        <div style="grid-column: span 2;"><label>專案名稱</label><input id="pTitle" placeholder="如：夏季手機維修大賞"></div>
+        <div><label>品項</label><input id="pProduct" placeholder="電池/螢幕/主板"></div>
+        <div><label>門市</label><input id="pStore" placeholder="勤美/沙鹿"></div>
+        <div><label>狀態</label><select id="pStatus"><option>規劃中</option><option>執行中</option><option>已結案</option></select></div>
       </div>
-      <div class="row" style="margin-top:20px"><button id="btnCreateProject" class="btn primary">建立專案</button><div id="msg" class="muted"></div></div>
-    </div>
-  </div>
-
-  <div id="mCampaign" class="modal hidden">
-    <div class="modalcard">
-      <div class="modalhead"><div class="h">新增活動</div><button class="btn" onclick="hide(mCampaign)">關閉</button></div>
-      <div class="formgrid">
-        <label class="full"><span>活動名稱</span><input id="cName"></label>
-        <label><span>平台</span><input id="cPlatform"></label>
-        <label><span>門市</span><input id="cStore"></label>
-        <label><span>品項</span><input id="cProduct"></label>
-        <label><span>主題</span><input id="cTheme"></label>
-        <label><span>目標</span><input id="cObjective"></label>
-        <label><span>狀態</span><input id="cStatus"></label>
-        <label><span>開始日</span><input id="cStart" type="date"></label>
-        <label><span>結束日</span><input id="cEnd" type="date"></label>
-        <label class="full"><span>預算備註</span><input id="cBudget"></label>
+      <div style="margin-top:20px; display:flex; gap:10px;">
+        <button id="btnSubmitProject" class="btn primary">確認建立</button>
+        <button class="btn" onclick="toggleModal('mProject', false)">取消</button>
       </div>
-      <div class="row" style="margin-top:20px"><button id="btnCreateCampaign" class="btn primary">建立活動</button><div id="cmsg" class="muted"></div></div>
-    </div>
-  </div>
-
-  <div id="mLog" class="modal hidden">
-    <div class="modalcard">
-      <div class="modalhead"><div class="h">新增變更紀錄</div><button class="btn" onclick="hide(mLog)">關閉</button></div>
-      <div class="formgrid">
-        <label><span>改動類型</span><input id="lType" placeholder="預算/素材/文案"></label>
-        <label><span>Before</span><input id="lBefore"></label>
-        <label><span>After</span><input id="lAfter"></label>
-        <label class="full"><span>原因/假設</span><input id="lHypo"></label>
-      </div>
-      <div class="row" style="margin-top:20px"><button id="btnCreateLog" class="btn primary">儲存紀錄</button><div id="lmsg" class="muted"></div></div>
     </div>
   </div>
 
   <script>
     const SUPABASE_URL = "https://udycidkswyqasnzwlmqv.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkeWNpZGtzd3lxYXNuendsbXF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODYzNzUsImV4cCI6MjA4ODI2MjM3NX0.Gu68eely_7xJrRBAuevEXzPt93Hnzr1fVwnz3SSp3pk";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkeWNpZGtzd3lxYXNuendsbXF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODYzNzUsImV4cCI6MjA4ODI2MjM3NX0.Gu68eely_7xJrRBAuevEXzPt93Hnzr1fVwnz3SSp3pk";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const $ = (id) => document.getElementById(id);
-    const show = (el) => el.classList.remove("hidden");
-    const hide = (el) => el.classList.add("hidden");
-    const esc = (s = "") => String(s ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
-    
-    async function q(p) { 
-      const { data, error } = await p;
-      if (error) { console.error(error); throw error; }
-      return data;
+    const $ = id => document.getElementById(id);
+
+    // 強化的 Modal 切換函數 [cite: 7, 27]
+    function toggleModal(id, isShow) {
+      const el = $(id);
+      if (isShow) el.classList.remove('hidden');
+      else el.classList.add('hidden');
     }
 
-    const S = { year: "ALL", project: null };
-
-    function notice(msg, duration = 3000) {
-      const box = $("sysMsg");
-      box.textContent = msg; show(box);
-      if(duration > 0) setTimeout(() => hide(box), duration);
-    }
-
-    function viewList() {
-      $("kicker").textContent = "MARKETING"; $("topTitle").textContent = "廣告專案計畫表";
-      hide($("btnBack")); show($("btnNewProject")); show($("viewList")); hide($("viewDetail"));
-      location.hash = "";
-    }
-
-    async function loadDetail(pid) {
-      try {
-        S.project = await api.getProject(pid);
-        $("kicker").textContent = "PROJECT"; $("topTitle").textContent = S.project.title;
-        show($("btnBack")); hide($("btnNewProject")); hide($("viewList")); show($("viewDetail"));
-        
-        $("fYear").value = S.project.year || "";
-        $("fTitle").value = S.project.title || "";
-        $("fProduct").value = S.project.product || "";
-        $("fTheme").value = S.project.theme || "";
-        $("fPlatforms").value = S.project.platforms || "";
-        $("fStore").value = S.project.store || "";
-        $("fObjective").value = S.project.objective || "";
-        $("fStatus").value = S.project.status || "";
-        $("fStart").value = S.project.start_date || "";
-        $("fEnd").value = S.project.end_date || "";
-        $("fNotes").value = S.project.notes || "";
-        
-        await Promise.all([renderWeeks(), renderCampaigns(), renderLogs()]);
-      } catch (e) {
-        notice("專案載入失敗：" + e.message);
-        viewList();
-      }
-    }
-
-    const api = {
-      years: async () => {
-        const rows = await q(supabase.from("projects").select("year").order("year", { ascending: false }));
-        return [...new Set(rows.map(r => r.year))];
-      },
-      projects: async (year) => {
-        let p = supabase.from("projects").select("*").order("created_at", { ascending: false });
-        if (year && year !== "ALL") p = p.eq("year", Number(year));
-        return await q(p);
-      },
-      createProject: async (p) => await q(supabase.from("projects").insert(p).select().single()),
-      getProject: async (id) => await q(supabase.from("projects").select("*").eq("id", id).single()),
-      updateProject: async (id, p) => await q(supabase.from("projects").update(p).eq("id", id).select().single()),
-      
-      weeks: async (pid) => await q(supabase.from("playbook_weeks").select("*").eq("project_id", pid).order("week", { ascending: true })),
-      ensureWeeks: async (pid) => {
-        const have = await api.weeks(pid);
-        const existing = new Set(have.map(w => w.week));
-        const missing = ["W1", "W2", "W3", "W4"].filter(w => !existing.has(w));
-        if (missing.length) {
-          await q(supabase.from("playbook_weeks").insert(missing.map(w => ({ project_id: pid, week: w }))));
-        }
-      },
-      saveWeek: async (id, focus, plan) => await q(supabase.from("playbook_weeks").update({ focus, plan }).eq("id", id)),
-      
-      campaigns: async (pid) => await q(supabase.from("campaigns").select("*").eq("project_id", pid).order("created_at", { ascending: false })),
-      createCampaign: async (c) => await q(supabase.from("campaigns").insert(c).select().single()),
-      
-      logs: async (pid) => {
-        const camps = await api.campaigns(pid);
-        const ids = camps.map(c => c.id);
-        if (!ids.length) return [];
-        const logs = await q(supabase.from("change_log").select("*").in("campaign_id", ids).order("timestamp", { ascending: false }));
-        const map = new Map(camps.map(c => [c.id, c.campaign_name]));
-        return logs.map(r => ({ ...r, campaign_name: map.get(r.campaign_id) || "未知活動" }));
-      },
-      createLog: async (l) => await q(supabase.from("change_log").insert(l).select().single())
+    // 初始化綁定 
+    window.onload = () => {
+      $('btnNewProject').onclick = () => toggleModal('mProject', true);
+      $('btnBack').onclick = () => location.hash = '';
+      loadProjects();
     };
 
-    async function renderYearSelect() {
-      const years = await api.years();
-      $("yearSelect").innerHTML = `<option value="ALL">全部年度</option>` + years.map(y => `<option value="${y}">${y}</option>`).join("");
-    }
-
-    async function renderProjects() {
-      const list = await api.projects(S.year);
-      $("grid").innerHTML = list.length ? list.map(p => `
+    async function loadProjects() {
+      const { data, error } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
+      if (error) return $('grid').innerHTML = "資料讀取失敗";
+      
+      $('grid').innerHTML = data.map(p => `
         <div class="card" onclick="location.hash='#project=${p.id}'">
-          <div class="title">${esc(p.title)}</div>
-          <div class="meta">${p.year}｜${esc(p.product)}｜${esc(p.theme)}<br>狀態：${esc(p.status)}</div>
-        </div>`).join("") : `<div class="muted">尚無專案</div>`;
+          <strong>${p.title}</strong>
+          <div style="font-size:12px; color:#888; margin-top:8px;">${p.year} | ${p.store} | ${p.status}</div>
+        </div>
+      `).join('');
     }
 
-    async function renderWeeks() {
-      const weeks = await api.weeks(S.project.id);
-      const wrap = $("weeks");
-      wrap.innerHTML = weeks.length ? "" : `<div class="muted">尚未建立 W1~W4 投放節奏</div>`;
-      weeks.forEach(w => {
-        const el = document.createElement("div");
-        el.className = "item";
-        el.innerHTML = `
-          <div style="flex:1">
-            <div class="t">${w.week}</div>
-            <div class="row" style="margin-top:8px">
-              <input style="flex:1" placeholder="Focus" data-f="focus" value="${esc(w.focus)}">
-              <input style="flex:2" placeholder="Plan" data-f="plan" value="${esc(w.plan)}">
-            </div>
-          </div>
-          <button class="btn primary" onclick="saveWeekBtn(this, '${w.id}')">儲存</button>`;
-        wrap.appendChild(el);
-      });
-    }
-
-    async function saveWeekBtn(btn, id) {
-      const row = btn.parentElement;
-      const focus = row.querySelector('[data-f="focus"]').value;
-      const plan = row.querySelector('[data-f="plan"]').value;
+    $('btnSubmitProject').onclick = async () => {
+      const btn = $('btnSubmitProject');
       btn.disabled = true;
-      try { await api.saveWeek(id, focus, plan); notice("週計畫已儲存"); } 
-      catch(e) { notice("儲存失敗"); }
-      finally { btn.disabled = false; }
-    }
+      btn.innerText = "處理中...";
 
-    async function renderCampaigns() {
-      const list = await api.campaigns(S.project.id);
-      const wrap = $("campaigns");
-      wrap.innerHTML = list.length ? "" : `<div class="muted">尚未建立廣告活動</div>`;
-      list.forEach(c => {
-        const el = document.createElement("div");
-        el.className = "item";
-        el.innerHTML = `
-          <div>
-            <div class="t">${esc(c.campaign_name)}</div>
-            <div class="s">${esc(c.platform)}｜${esc(c.status)}｜${c.start_date || ""}~${c.end_date || ""}</div>
-          </div>
-          <button class="btn" onclick="openLogModal('${c.id}')">新增紀錄</button>`;
-        wrap.appendChild(el);
-      });
-    }
-
-    async function renderLogs() {
-      const list = await api.logs(S.project.id);
-      const wrap = $("logs");
-      wrap.innerHTML = list.length ? list.map(l => `
-        <div class="item">
-          <div>
-            <div class="t">${esc(l.campaign_name)}：${esc(l.change_type)}</div>
-            <div class="s">${new Date(l.timestamp).toLocaleString()}｜Before: ${esc(l.before)} ➡️ After: ${esc(l.after)}</div>
-            <div class="s" style="color:var(--text)">💡 ${esc(l.hypothesis)}</div>
-          </div>
-        </div>`).join("") : `<div class="muted">尚無變更紀錄</div>`;
-    }
-
-    $("btnBack").onclick = viewList;
-    $("btnNewProject").onclick = () => show(mProject);
-    
-    $("btnCreateProject").onclick = async () => {
-      const p = {
-        year: Number($("pYear").value), title: $("pTitle").value.trim(),
-        product: $("pProduct").value, theme: $("pTheme").value, platforms: $("pPlatforms").value,
-        store: $("pStore").value, objective: $("pObjective").value, status: $("pStatus").value,
-        start_date: $("pStart").value || null, end_date: $("pEnd").value || null, notes: $("pNotes").value
+      const newData = {
+        year: parseInt($('pYear').value),
+        title: $('pTitle').value,
+        product: $('pProduct').value,
+        store: $('pStore').value,
+        status: $('pStatus').value
       };
-      if(!p.title) return alert("請輸入專案名稱");
-      try {
-        const res = await api.createProject(p);
-        hide(mProject); location.hash = `#project=${res.id}`;
-      } catch(e) { notice("建立失敗：" + e.message); }
+
+      const { data, error } = await supabase.from('projects').insert([newData]).select();
+      
+      if (error) {
+        alert("建立失敗：" + error.message);
+      } else {
+        toggleModal('mProject', false);
+        loadProjects();
+        $('pTitle').value = ''; // 清空
+      }
+      btn.disabled = false;
+      btn.innerText = "確認建立";
     };
 
-    $("btnSaveProject").onclick = async () => {
-      const p = {
-        year: Number($("fYear").value), title: $("fTitle").value.trim(),
-        product: $("fProduct").value, theme: $("fTheme").value, platforms: $("fPlatforms").value,
-        store: $("fStore").value, objective: $("fObjective").value, status: $("fStatus").value,
-        start_date: $("fStart").value || null, end_date: $("fEnd").value || null, notes: $("fNotes").value
-      };
-      try {
-        await api.updateProject(S.project.id, p);
-        notice("專案資訊已更新"); await loadDetail(S.project.id);
-      } catch(e) { notice("儲存失敗"); }
+    // 路由處理 [cite: 74]
+    window.onhashchange = () => {
+      const hash = location.hash;
+      if (hash.includes('#project=')) {
+        $('viewList').classList.add('hidden');
+        $('viewDetail').classList.remove('hidden');
+        $('btnBack').classList.remove('hidden');
+        // 這裡可以加入讀取單一專案詳細資料的 api 調用
+      } else {
+        $('viewList').classList.remove('hidden');
+        $('viewDetail').classList.add('hidden');
+        $('btnBack').classList.add('hidden');
+        loadProjects();
+      }
     };
-
-    $("btnInitWeeks").onclick = async () => {
-      try { await api.ensureWeeks(S.project.id); await renderWeeks(); notice("W1~W4 建立完成"); }
-      catch(e) { notice("建立失敗"); }
-    };
-
-    $("btnNewCampaign").onclick = () => {
-      const date = new Date().toISOString().slice(2,10).replace(/-/g,"");
-      $("cName").value = `${S.project.platforms || "ADS"}_${S.project.store || "STORE"}_${S.project.product || "PROD"}_${date}`;
-      $("cPlatform").value = S.project.platforms || "";
-      $("cStore").value = S.project.store || "";
-      $("cProduct").value = S.project.product || "";
-      $("cTheme").value = S.project.theme || "";
-      $("cObjective").value = S.project.objective || "";
-      $("cStatus").value = "投放中";
-      show(mCampaign);
-    };
-
-    $("btnCreateCampaign").onclick = async () => {
-      const c = {
-        project_id: S.project.id, campaign_name: $("cName").value, platform: $("cPlatform").value,
-        store: $("cStore").value, product: $("cProduct").value, theme: $("cTheme").value,
-        objective: $("cObjective").value, status: $("cStatus").value,
-        start_date: $("cStart").value || null, end_date: $("cEnd").value || null, budget_note: $("cBudget").value
-      };
-      try { await api.createCampaign(c); hide(mCampaign); renderCampaigns(); }
-      catch(e) { notice("建立活動失敗"); }
-    };
-
-    let currentCid = "";
-    function openLogModal(cid) { currentCid = cid; show(mLog); }
-    $("btnCreateLog").onclick = async () => {
-      const l = { campaign_id: currentCid, change_type: $("lType").value, before: $("lBefore").value, after: $("lAfter").value, hypothesis: $("lHypo").value };
-      try { await api.createLog(l); hide(mLog); renderLogs(); }
-      catch(e) { notice("儲存紀錄失敗"); }
-    };
-
-    window.addEventListener("hashchange", () => {
-      const pid = (location.hash.match(/#project=([^&]+)/) || [])[1];
-      pid ? loadDetail(pid) : viewList();
-    });
-
-    (async () => {
-      await renderYearSelect(); await renderProjects();
-      const pid = (location.hash.match(/#project=([^&]+)/) || [])[1];
-      if(pid) loadDetail(pid);
-    })();
   </script>
 </body>
 </html>
