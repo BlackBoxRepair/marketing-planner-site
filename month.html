@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Marketing Planner（月份詳情）</title>
+  <link rel="stylesheet" href="./style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1 id="pageTitle">月份計畫</h1>
+      <p class="sub" id="pageSub">第二層：W1~W4 節奏 + 活動 + 變更紀錄</p>
+    </div>
+    <div class="row">
+      <a class="ghost" href="./index.html">← 回月份列表</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <div class="row space-between">
+        <h2>本月資訊</h2>
+        <div class="row">
+          <button id="btnRefreshMonth" class="ghost">重新整理</button>
+          <button id="btnDeleteMonth" class="danger">刪除此月份</button>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <label>
+          <span>月份（YYYY-MM）</span>
+          <input id="mYearMonth" disabled />
+        </label>
+        <label>
+          <span>主題（Theme）</span>
+          <input id="mTheme" />
+        </label>
+        <label>
+          <span>備註</span>
+          <input id="mNotes" />
+        </label>
+      </div>
+
+      <div class="row">
+        <button id="btnSaveMonth" class="primary">儲存本月資訊</button>
+        <span id="msgMonth" class="msg"></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row space-between">
+        <h2>W1~W4 投放節奏（Playbook）</h2>
+        <button id="btnInitWeeks" class="ghost">一鍵建立 W1~W4</button>
+      </div>
+
+      <div id="weeksList" class="list"></div>
+      <div class="hint">提示：先按「一鍵建立 W1~W4」，再逐週填「Focus / Plan」。</div>
+    </section>
+
+    <section class="card">
+      <div class="row space-between">
+        <h2>本月活動（Campaigns）</h2>
+        <button id="btnNewCampaign" class="primary">新增活動</button>
+      </div>
+
+      <div id="campaignsList" class="list"></div>
+      <div class="hint">建議命名：平台_門市_品項_主題_目標_年月（例：META_KM_BAT_SPR_MSG_202603）</div>
+    </section>
+
+    <section class="card">
+      <div class="row space-between">
+        <h2>變更紀錄（Change Log）</h2>
+        <div class="hint">在「活動」卡片內點「新增變更」即可記錄。</div>
+      </div>
+      <div id="logList" class="list"></div>
+    </section>
+  </main>
+
+  <!-- 新增/編輯活動 Modal -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-card">
+      <div class="row space-between">
+        <h3 id="modalTitle">新增活動</h3>
+        <button id="modalClose" class="ghost">關閉</button>
+      </div>
+
+      <div class="grid-3">
+        <label>
+          <span>平台</span>
+          <select id="cPlatform">
+            <option value="META">META</option>
+            <option value="GOOGLE">GOOGLE</option>
+          </select>
+        </label>
+
+        <label>
+          <span>門市</span>
+          <select id="cStore">
+            <option value="勤美">勤美</option>
+            <option value="沙鹿">沙鹿</option>
+          </select>
+        </label>
+
+        <label>
+          <span>品項</span>
+          <select id="cProduct">
+            <option value="電池更換">電池更換</option>
+            <option value="螢幕更換">螢幕更換</option>
+            <option value="主機板維修">主機板維修</option>
+            <option value="資料救援">資料救援</option>
+            <option value="Switch維修">Switch維修</option>
+          </select>
+        </label>
+
+        <label>
+          <span>主題（Theme）</span>
+          <input id="cTheme" placeholder="例如 春天/沙灘/中秋" />
+        </label>
+
+        <label>
+          <span>目標</span>
+          <select id="cObjective">
+            <option value="MSG">MSG（訊息）</option>
+            <option value="LEAD">LEAD（表單）</option>
+            <option value="CALL">CALL（來電）</option>
+          </select>
+        </label>
+
+        <label>
+          <span>活動名稱（Campaign name）</span>
+          <input id="cName" placeholder="例如 META_KM_BAT_SPR_MSG_202603" />
+        </label>
+
+        <label>
+          <span>開始日期</span>
+          <input id="cStart" type="date" />
+        </label>
+
+        <label>
+          <span>結束日期</span>
+          <input id="cEnd" type="date" />
+        </label>
+
+        <label>
+          <span>預算備註</span>
+          <input id="cBudget" placeholder="例如 每日 300 / 放大到 360" />
+        </label>
+
+        <label>
+          <span>狀態</span>
+          <select id="cStatus">
+            <option value="規劃中">規劃中</option>
+            <option value="投放中">投放中</option>
+            <option value="結案">結案</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="row">
+        <button id="modalSave" class="primary">儲存</button>
+        <span id="modalMsg" class="msg"></span>
+      </div>
+      <input id="cId" type="hidden" />
+    </div>
+  </div>
+
+  <!-- 新增變更紀錄 Modal -->
+  <div id="logModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="row space-between">
+        <h3>新增變更紀錄</h3>
+        <button id="logClose" class="ghost">關閉</button>
+      </div>
+
+      <div class="grid-3">
+        <label>
+          <span>改動類型</span>
+          <select id="lType">
+            <option value="預算">預算</option>
+            <option value="素材">素材</option>
+            <option value="文案">文案</option>
+            <option value="受眾">受眾</option>
+            <option value="版位">版位</option>
+            <option value="出價">出價</option>
+            <option value="其他">其他</option>
+          </select>
+        </label>
+        <label>
+          <span>Before</span>
+          <input id="lBefore" placeholder="例如 300/日" />
+        </label>
+        <label>
+          <span>After</span>
+          <input id="lAfter" placeholder="例如 360/日" />
+        </label>
+        <label class="col-span-3">
+          <span>原因/假設</span>
+          <input id="lHypo" placeholder="例如 B CPA 較低，嘗試擴量" />
+        </label>
+      </div>
+
+      <div class="row">
+        <button id="logSave" class="primary">儲存紀錄</button>
+        <span id="logMsg" class="msg"></span>
+      </div>
+      <input id="lCampaignId" type="hidden" />
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+  <script>
+    Planner.initMonth();
+  </script>
+</body>
+</html>
