@@ -11,7 +11,6 @@ function qs(name){
   const u = new URL(location.href);
   return u.searchParams.get(name);
 }
-
 function show(el){ el.classList.remove("hidden"); }
 function hide(el){ el.classList.add("hidden"); }
 
@@ -22,26 +21,21 @@ async function listProjects(year){
   if (error) throw error;
   return data || [];
 }
-
 async function listYears(){
   const { data, error } = await supabase.from("projects").select("year").order("year",{ascending:false});
   if (error) throw error;
-  const years = [...new Set((data||[]).map(x=>x.year).filter(Boolean))];
-  return years;
+  return [...new Set((data||[]).map(x=>x.year).filter(Boolean))];
 }
-
 async function createProject(payload){
   const { data, error } = await supabase.from("projects").insert(payload).select().single();
   if (error) throw error;
   return data;
 }
-
 async function getProject(id){
   const { data, error } = await supabase.from("projects").select("*").eq("id", id).single();
   if (error) throw error;
   return data;
 }
-
 async function updateProject(id, payload){
   const { data, error } = await supabase.from("projects").update(payload).eq("id", id).select().single();
   if (error) throw error;
@@ -60,7 +54,8 @@ async function ensureWeeks(project_id){
   const have = new Set(weeks.map(w=>w.week));
   const need = ["W1","W2","W3","W4"].filter(w=>!have.has(w));
   for (const w of need){
-    await supabase.from("playbook_weeks").insert({ project_id, week: w });
+    const { error } = await supabase.from("playbook_weeks").insert({ project_id, week: w });
+    if (error) throw error;
   }
 }
 async function saveWeek(id, focus, plan){
@@ -105,7 +100,6 @@ const Planner = {
     const yearPill = $("yearPill");
     const dropdown = $("yearDropdown");
     const yearOptions = $("yearOptions");
-
     let currentYear = "ALL";
 
     const renderYears = async ()=>{
@@ -140,15 +134,34 @@ const Planner = {
       });
     };
 
-    yearPill.onclick = async ()=>{
+    yearPill.onclick = ()=>{
       dropdown.classList.contains("hidden") ? show(dropdown) : hide(dropdown);
     };
 
-    // 新增專案 modal
-    const modal = $("modal");
-    $("btnOpenNewProject").onclick = ()=>show(modal);
-    $("btnCloseModal").onclick = ()=>hide(modal);
+    // 點外面關 dropdown
+    document.addEventListener("click",(e)=>{
+      if (!dropdown.contains(e.target) && e.target !== yearPill) hide(dropdown);
+    });
 
+    // ===== 新增專案 modal（這段已修好：按鈕/背景/ESC 都能關）=====
+    const modal = $("modal");
+    const openBtn = $("btnOpenNewProject");
+    const closeBtn = $("btnCloseModal");
+
+    openBtn?.addEventListener("click", () => show(modal));
+    closeBtn?.addEventListener("click", () => hide(modal));
+
+    // 點背景關閉（點到卡片本體不會關）
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) hide(modal);
+    });
+
+    // ESC 關閉
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !modal.classList.contains("hidden")) hide(modal);
+    });
+
+    // 建立專案
     $("btnCreateProject").onclick = async ()=>{
       const msg = $("msg");
       msg.textContent = "";
@@ -171,17 +184,14 @@ const Planner = {
       try{
         await createProject({ year, title, product, theme, platforms, store, objective, status, start_date, end_date, notes });
         hide(modal);
+        // 清空欄位
+        $("pYear").value=""; $("pTitle").value=""; $("pTheme").value=""; $("pStart").value=""; $("pEnd").value=""; $("pNotes").value="";
         await renderYears();
         await render();
       }catch(e){
         msg.textContent = "建立失敗：" + e.message;
       }
     };
-
-    // 點外面關 dropdown
-    document.addEventListener("click",(e)=>{
-      if (!dropdown.contains(e.target) && e.target !== yearPill) hide(dropdown);
-    });
 
     await renderYears();
     await render();
@@ -193,7 +203,6 @@ const Planner = {
 
     let project = await getProject(id);
 
-    // fill
     $("ptitle").textContent = project.title;
 
     $("fYear").value = project.year || "";
@@ -322,7 +331,7 @@ const Planner = {
       }
     };
 
-    // campaign modal
+    // ===== Campaign modal =====
     const cModal = $("cModal");
     $("btnNewCampaign").onclick = ()=>{
       $("cName").value = "";
@@ -339,6 +348,7 @@ const Planner = {
       show(cModal);
     };
     $("btnCloseCModal").onclick = ()=>hide(cModal);
+    cModal.addEventListener("click",(e)=>{ if (e.target === cModal) hide(cModal); });
 
     $("btnCreateCampaign").onclick = async ()=>{
       const cmsg = $("cmsg");
@@ -367,9 +377,10 @@ const Planner = {
       }
     };
 
-    // log modal
+    // ===== Log modal =====
     const lModal = $("lModal");
     $("btnCloseLModal").onclick = ()=>hide(lModal);
+    lModal.addEventListener("click",(e)=>{ if (e.target === lModal) hide(lModal); });
 
     $("btnCreateLog").onclick = async ()=>{
       const lmsg = $("lmsg");
@@ -391,6 +402,13 @@ const Planner = {
         lmsg.textContent="儲存失敗：" + e.message;
       }
     };
+
+    // ESC 可關閉任何 modal（如果打開）
+    document.addEventListener("keydown",(e)=>{
+      if (e.key !== "Escape") return;
+      if (!cModal.classList.contains("hidden")) hide(cModal);
+      if (!lModal.classList.contains("hidden")) hide(lModal);
+    });
 
     await renderWeeks();
     await renderCampaigns();
