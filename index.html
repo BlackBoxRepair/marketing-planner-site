@@ -3,199 +3,121 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>黑盒子｜行銷廣告專案管理</title>
+  <title>黑盒子｜行銷廣告專案</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root {
-      --brand: #AE8E53;
-      --bg: #F6F5F2;
-      --paper: #ffffff;
-      --text: #151515;
-      --muted: rgba(21,21,21,.58);
-      --line: rgba(21,21,21,.10);
-      --r: 20px;
-    }
+    :root { --brand: #AE8E53; --bg: #F6F5F2; --paper: #fff; --line: rgba(21,21,21,.10); --r: 20px; }
     * { box-sizing: border-box; }
-    body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; margin: 0; line-height: 1.5; }
-    .hidden { display: none !important; }
-
-    header {
-      position: sticky; top: 0; z-index: 100;
-      background: rgba(246, 245, 242, 0.9); backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--line);
-      padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;
-    }
-    h1 { margin: 0; font-size: 22px; font-weight: 900; }
-
-    .btn {
-      border: 1px solid var(--line); background: var(--paper);
-      padding: 10px 18px; border-radius: 999px; font-weight: 900; cursor: pointer;
-      transition: all 0.2s; font-size: 14px; display: inline-flex; align-items: center;
-    }
-    .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    body { background: var(--bg); color: #151515; font-family: system-ui, sans-serif; margin: 0; }
+    header { position: sticky; top: 0; z-index: 100; background: rgba(246,245,242,0.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
+    h1 { margin: 0; font-size: 20px; font-weight: 900; }
+    .btn { border: 1px solid var(--line); background: #fff; padding: 10px 18px; border-radius: 999px; font-weight: 900; cursor: pointer; transition: 0.2s; font-size: 14px; }
     .btn.primary { background: var(--brand); color: #fff; border-color: var(--brand); }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
     main { max-width: 1000px; margin: 0 auto; padding: 20px; }
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-    
-    .card {
-      background: var(--paper); padding: 20px; border-radius: var(--r);
-      border: 1px solid var(--line); cursor: pointer; transition: 0.2s;
-    }
-    .card:hover { border-color: var(--brand); }
-
-    .modal-overlay {
-      position: fixed; inset: 0; z-index: 1000;
-      background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; padding: 16px;
-    }
-    .modal-content {
-      background: #fff; width: 100%; max-width: 600px; border-radius: var(--r);
-      padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-    }
-
-    .form-group { margin-bottom: 16px; }
-    label { display: block; font-size: 12px; font-weight: 900; color: var(--muted); margin-bottom: 6px; }
-    input, select, textarea {
-      width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--line);
-      background: #fdfdfd; font-size: 14px; outline: none;
-    }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .card { background: #fff; padding: 20px; border-radius: var(--r); border: 1px solid var(--line); cursor: pointer; }
+    .hidden { display: none !important; }
+    .modal { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .modal-content { background: #fff; width: 100%; max-width: 500px; border-radius: var(--r); padding: 24px; }
+    .form-group { margin-bottom: 12px; }
+    label { display: block; font-size: 12px; font-weight: 900; color: #888; margin-bottom: 4px; }
+    input, select { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--line); outline: none; }
   </style>
 </head>
 <body>
 
   <header>
-    <div>
-      <div style="font-size: 10px; color: var(--brand); font-weight: 900; letter-spacing: 2px;">BLACKBOX 3C</div>
-      <h1 id="pageTitle">行銷廣告專案</h1>
-    </div>
-    <div id="headerActions">
+    <h1>行銷廣告專案</h1>
+    <div id="nav">
       <button id="btnOpenAdd" class="btn primary">＋ 新增專案</button>
       <button id="btnBack" class="btn hidden">← 回列表</button>
     </div>
   </header>
 
   <main>
-    <section id="listPage">
-      <div id="projectGrid" class="grid">載入中...</div>
-    </section>
-
-    <section id="detailPage" class="hidden">
-      <div style="background: #fff; padding: 24px; border-radius: var(--r); border: 1px solid var(--line);">
-        <h2 id="detailTitle" style="margin-top:0">專案內容</h2>
-        <div id="detailForm"></div>
-        <div style="margin-top:24px; display:flex; gap:12px;">
-            <button id="btnUpdateProject" class="btn primary">儲存修改</button>
-            <button id="btnDeleteProject" class="btn" style="color:red; border-color:rgba(255,0,0,0.1)">刪除專案</button>
-        </div>
+    <div id="listPage" class="grid">載入中...</div>
+    <div id="detailPage" class="hidden" style="background:#fff; padding:24px; border-radius:var(--r); border:1px solid var(--line);">
+      <h2 id="detTitle" style="margin-top:0"></h2>
+      <div id="detContent"></div>
+      <div style="margin-top:20px; display:flex; gap:10px;">
+        <button id="btnSave" class="btn primary">儲存</button>
+        <button id="btnDel" class="btn" style="color:red">刪除</button>
       </div>
-    </section>
+    </div>
   </main>
 
-  <div id="addModal" class="modal-overlay hidden">
+  <div id="addModal" class="modal hidden">
     <div class="modal-content">
-      <h2 style="margin-top:0">建立新專案</h2>
-      <div class="form-group">
-        <label>專案名稱</label>
-        <input type="text" id="pTitle" placeholder="專案標題">
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>年度</label><input type="number" id="pYear" value="2026"></div>
-        <div class="form-group">
-          <label>門市</label>
-          <select id="pStore">
-            <option value="勤美公益店">勤美公益店</option>
-            <option value="沙鹿站前店">沙鹿站前店</option>
-          </select>
-        </div>
-      </div>
-      <div style="margin-top:20px; display:flex; gap:10px; justify-content: flex-end;">
-        <button id="btnCancelAdd" class="btn">取消</button>
-        <button id="btnConfirmAdd" class="btn primary">確認建立</button>
+      <h2 style="margin-top:0">新增專案</h2>
+      <div class="form-group"><label>標題</label><input id="pTitle"></div>
+      <div class="form-group"><label>門市</label><select id="pStore"><option>勤美公益店</option><option>沙鹿站前店</option></select></div>
+      <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
+        <button id="btnCancel" class="btn">取消</button>
+        <button id="btnConfirm" class="btn primary">確認建立</button>
       </div>
     </div>
   </div>
 
   <script>
-    // 解決重複宣告問題：確保只宣告一次
-    const SB_URL = "https://udycidkswyqasnzwlmqv.supabase.co";
-    const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkeWNpZGtzd3lxYXNuendsbXF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODYzNzUsImV4cCI6MjA4ODI2MjM3NX0.Gu68eely_7xJrRBAuevEXzPt93Hnzr1fVwnz3SSp3pk";
-    const supabase = window.supabase.createClient(SB_URL, SB_KEY);
+    // 關鍵修正：移除所有重複宣告，只在最頂層定義一次
+    (function() {
+      const URL = "https://udycidkswyqasnzwlmqv.supabase.co";
+      const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkeWNpZGtzd3lxYXNuendsbXF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODYzNzUsImV4cCI6MjA4ODI2MjM3NX0.Gu68eely_7xJrRBAuevEXzPt93Hnzr1fVwnz3SSp3pk";
+      const client = window.supabase.createClient(URL, KEY);
 
-    const ui = {
-      grid: document.getElementById('projectGrid'),
-      listPage: document.getElementById('listPage'),
-      detailPage: document.getElementById('detailPage'),
-      addModal: document.getElementById('addModal'),
-      btnOpenAdd: document.getElementById('btnOpenAdd'),
-      btnBack: document.getElementById('btnBack')
-    };
+      const listPage = document.getElementById('listPage');
+      const detailPage = document.getElementById('detailPage');
+      const addModal = document.getElementById('addModal');
+      const btnBack = document.getElementById('btnBack');
+      const btnOpenAdd = document.getElementById('btnOpenAdd');
 
-    // 載入列表
-    async function loadProjects() {
-      ui.grid.innerHTML = '讀取中...';
-      const { data, error } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
-      if (error) { ui.grid.innerHTML = '載入失敗'; return; }
-      
-      ui.grid.innerHTML = data.map(p => `
-        <div class="card" onclick="showDetail('${p.id}')">
-          <div style="font-weight:900; font-size:18px;">${p.title}</div>
-          <div style="font-size:12px; color:#888;">${p.year} | ${p.store || '未設定'}</div>
-        </div>
-      `).join('');
-    }
-
-    // 顯示詳情
-    async function showDetail(id) {
-      ui.listPage.classList.add('hidden');
-      ui.detailPage.classList.remove('hidden');
-      ui.btnOpenAdd.classList.add('hidden');
-      ui.btnBack.classList.remove('hidden');
-
-      const { data } = await supabase.from('projects').select('*').eq('id', id).single();
-      if (data) {
-        document.getElementById('detailTitle').innerText = data.title;
-        document.getElementById('detailForm').innerHTML = `
-          <div class="form-group"><label>專案名稱</label><input id="editTitle" value="${data.title}"></div>
-          <div class="form-group"><label>備註</label><textarea id="editNotes" rows="3">${data.notes || ''}</textarea></div>
-        `;
-        document.getElementById('btnUpdateProject').onclick = () => updateProject(id);
-        document.getElementById('btnDeleteProject').onclick = () => deleteProject(id);
+      async function fetchAll() {
+        listPage.innerHTML = '讀取中...';
+        const { data, error } = await client.from('projects').select('*').order('created_at', { ascending: false });
+        if (error) { listPage.innerHTML = '讀取失敗'; return; }
+        listPage.innerHTML = data.map(p => `
+          <div class="card" onclick="window.viewDetail('${p.id}')">
+            <div style="font-weight:900;">${p.title}</div>
+            <div style="font-size:12px; color:#888;">${p.year || 2026} | ${p.store || ''}</div>
+          </div>
+        `).join('') || '目前沒有專案';
       }
-    }
 
-    async function updateProject(id) {
-      const { error } = await supabase.from('projects').update({
-        title: document.getElementById('editTitle').value,
-        notes: document.getElementById('editNotes').value
-      }).eq('id', id);
-      if (!error) alert("已儲存");
-    }
+      window.viewDetail = async function(id) {
+        listPage.classList.add('hidden');
+        btnOpenAdd.classList.add('hidden');
+        detailPage.classList.remove('hidden');
+        btnBack.classList.remove('hidden');
+        const { data } = await client.from('projects').select('*').eq('id', id).single();
+        if (data) {
+          document.getElementById('detTitle').innerText = data.title;
+          document.getElementById('detContent').innerHTML = `
+            <div class="form-group"><label>編輯標題</label><input id="edTitle" value="${data.title}"></div>
+            <div class="form-group"><label>備註</label><textarea id="edNotes" style="width:100%; padding:10px; border-radius:10px; border:1px solid #ddd;">${data.notes || ''}</textarea></div>
+          `;
+          document.getElementById('btnSave').onclick = async () => {
+            await client.from('projects').update({ title: document.getElementById('edTitle').value, notes: document.getElementById('edNotes').value }).eq('id', id);
+            alert('已儲存');
+          };
+          document.getElementById('btnDel').onclick = async () => {
+            if(confirm('確定刪除？')) { await client.from('projects').delete().eq('id', id); location.reload(); }
+          };
+        }
+      };
 
-    async function deleteProject(id) {
-      if (!confirm("確定刪除？")) return;
-      await supabase.from('projects').delete().eq('id', id);
-      location.reload();
-    }
+      btnOpenAdd.onclick = () => addModal.classList.remove('hidden');
+      document.getElementById('btnCancel').onclick = () => addModal.classList.add('hidden');
+      btnBack.onclick = () => location.reload();
 
-    // 按鈕綁定
-    ui.btnOpenAdd.onclick = () => ui.addModal.classList.remove('hidden');
-    document.getElementById('btnCancelAdd').onclick = () => ui.addModal.classList.add('hidden');
-    ui.btnBack.onclick = () => location.reload();
+      document.getElementById('btnConfirm').onclick = async () => {
+        const t = document.getElementById('pTitle').value;
+        if(!t) return;
+        await client.from('projects').insert([{ title: t, year: 2026, store: document.getElementById('pStore').value }]);
+        location.reload();
+      };
 
-    document.getElementById('btnConfirmAdd').onclick = async () => {
-      const title = document.getElementById('pTitle').value;
-      if (!title) return;
-      await supabase.from('projects').insert([{
-        title: title,
-        year: parseInt(document.getElementById('pYear').value),
-        store: document.getElementById('pStore').value
-      }]);
-      location.reload();
-    };
-
-    window.onload = loadProjects;
+      fetchAll();
+    })();
   </script>
 </body>
 </html>
