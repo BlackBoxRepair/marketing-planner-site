@@ -126,6 +126,7 @@
       border-radius: var(--r-lg);
       box-shadow: var(--shadow-1);
       padding: 8px;
+      z-index: 40;
     }
     .hidden{display:none}
     .dropdown-item{
@@ -264,17 +265,20 @@
 
     .msg{font-size:12px;color:rgba(21,21,21,.6)}
 
-    /* Modal (可捲動、不會卡、可點背景關) */
+    /* ====== Modal：修正「一半動不了」的核心 ======
+       外層不捲動，只有卡片內捲動；取消 sticky；z-index 拉到最上層 */
     .modal{
       position: fixed;
       inset: 0;
+      z-index: 9999;
       background: rgba(0,0,0,.22);
+
       display:flex;
-      align-items:flex-start;
+      align-items:center;
       justify-content:center;
+
       padding: 18px;
-      overflow:auto;
-      z-index: 60;
+      overflow: hidden;     /* ✅ 外層不要滾，避免事件被吃掉 */
     }
     .modal-card{
       width: min(920px, 100%);
@@ -282,16 +286,17 @@
       border: 1px solid rgba(21,21,21,.10);
       border-radius: var(--r-xl);
       box-shadow: var(--shadow-2);
-      padding: 18px;
-      margin-top: 70px;
-      max-height: calc(100vh - 120px);
-      overflow: auto;
+
+      max-height: calc(100vh - 36px);
+      overflow: auto;       /* ✅ 只讓卡片內捲動 */
       -webkit-overflow-scrolling: touch;
+
+      padding: 18px;
+      position: relative;
     }
     .modal-head{
-      position: sticky;
-      top: 0;
-      background: var(--paper);
+      position: static;     /* ✅ 不用 sticky，避免遮擋點擊 */
+      background: transparent;
       padding-bottom: 10px;
       display:flex;
       justify-content:space-between;
@@ -316,7 +321,7 @@
 </head>
 <body>
 
-  <!-- ====== Topbar (會依 view 切標題) ====== -->
+  <!-- Topbar -->
   <header class="topbar">
     <div class="title-block">
       <div class="kicker" id="kicker">MARKETING</div>
@@ -329,7 +334,7 @@
   </header>
 
   <main class="page">
-    <!-- ====== View 1: 專案卡片牆 ====== -->
+    <!-- View 1: 專案卡片牆 -->
     <section id="viewProjects" class="view">
       <section class="toolbar">
         <div class="pill pill-filter" id="yearPill">年度篩選器</div>
@@ -342,7 +347,7 @@
       <section id="grid" class="grid"></section>
     </section>
 
-    <!-- ====== View 2: 專案詳情 ====== -->
+    <!-- View 2: 專案詳情 -->
     <section id="viewProjectDetail" class="view hidden">
       <section class="panel">
         <div class="panel-head">
@@ -397,7 +402,7 @@
     </section>
   </main>
 
-  <!-- ====== Modal: 新增專案 ====== -->
+  <!-- Modal: 新增專案 -->
   <div id="modalProject" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">
@@ -498,7 +503,7 @@
     </div>
   </div>
 
-  <!-- ====== Modal: 新增活動 ====== -->
+  <!-- Modal: 新增活動 -->
   <div id="modalCampaign" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">
@@ -539,7 +544,7 @@
     </div>
   </div>
 
-  <!-- ====== Modal: 新增變更 ====== -->
+  <!-- Modal: 新增變更 -->
   <div id="modalLog" class="modal hidden" data-cid="">
     <div class="modal-card">
       <div class="modal-head">
@@ -569,7 +574,7 @@
   <script>
     /* ========= 你只要改這兩行 ========= */
     const SUPABASE_URL = "https://udycidkswyqasnzwlmqv.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkeWNpZGtzd3lxYXNuendsbXF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODYzNzUsImV4cCI6MjA4ODI2MjM3NX0.Gu68eely_7xJrRBAuevEXzPt93Hnzr1fVwnz3SSp3pk ";
+    const SUPABASE_ANON_KEY = "貼上你的 anon public key";
     /* ================================= */
 
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -595,9 +600,7 @@
     function openProjectDetail(projectId){
       location.hash = `#project=${encodeURIComponent(projectId)}`;
     }
-    function backToList(){
-      location.hash = "";
-    }
+    function backToList(){ location.hash = ""; }
     function parseHashProjectId(){
       const h = location.hash || "";
       const m = h.match(/#project=([^&]+)/);
@@ -683,7 +686,7 @@
       return data;
     }
 
-    // ====== UI State ======
+    // ===== UI State =====
     let currentYear = "ALL";
     let currentProject = null;
 
@@ -721,20 +724,26 @@
       });
     }
 
+    function showProjectsView(){
+      kicker.textContent = "MARKETING";
+      topTitle.textContent = "行銷廣告專案計劃表";
+      btnBack.classList.add("hidden");
+      btnOpenNewProject.classList.remove("hidden");
+      viewProjectDetail.classList.add("hidden");
+      viewProjects.classList.remove("hidden");
+    }
+
     async function loadProjectDetail(projectId){
       currentProject = await getProject(projectId);
 
-      // topbar
       kicker.textContent = "PROJECT";
       topTitle.textContent = currentProject.title;
       btnBack.classList.remove("hidden");
       btnOpenNewProject.classList.add("hidden");
 
-      // show view
       viewProjects.classList.add("hidden");
       viewProjectDetail.classList.remove("hidden");
 
-      // fill fields
       $("fYear").value = currentProject.year || "";
       $("fTitle").value = currentProject.title || "";
       $("fProduct").value = currentProject.product || "";
@@ -751,16 +760,6 @@
       await renderWeeks();
       await renderCampaigns();
       await renderLogs();
-    }
-
-    function showProjectsView(){
-      kicker.textContent = "MARKETING";
-      topTitle.textContent = "行銷廣告專案計劃表";
-      btnBack.classList.add("hidden");
-      btnOpenNewProject.classList.remove("hidden");
-
-      viewProjectDetail.classList.add("hidden");
-      viewProjects.classList.remove("hidden");
     }
 
     async function renderWeeks(){
@@ -847,7 +846,7 @@
       });
     }
 
-    // ====== Modal behaviors (關閉修好：按鈕/背景/ESC) ======
+    // ===== Modal 關閉（按鈕/背景/ESC）=====
     function setupModal(modalEl, closeBtnId){
       const closeBtn = document.getElementById(closeBtnId);
       closeBtn?.addEventListener("click", ()=> hide(modalEl));
@@ -866,7 +865,7 @@
       if (!dd.classList.contains("hidden")) hide(dd);
     });
 
-    // ====== Wire UI ======
+    // Dropdown
     $("yearPill").addEventListener("click", ()=>{
       const dd = $("yearDropdown");
       dd.classList.contains("hidden") ? show(dd) : hide(dd);
@@ -876,9 +875,11 @@
       if (!dd.contains(e.target) && e.target !== $("yearPill")) hide(dd);
     });
 
+    // Top buttons
     btnOpenNewProject.addEventListener("click", ()=> show(modalProject));
     btnBack.addEventListener("click", ()=> backToList());
 
+    // Create project
     $("btnCreateProject").addEventListener("click", async ()=>{
       const msg = $("msg");
       msg.textContent = "";
@@ -902,24 +903,24 @@
         const p = await createProject({ year, title, product, theme, platforms, store, objective, status, start_date, end_date, notes });
         hide(modalProject);
 
-        // 清空欄位
         $("pYear").value=""; $("pTitle").value=""; $("pTheme").value=""; $("pStart").value=""; $("pEnd").value=""; $("pNotes").value="";
 
         await renderYears();
         await renderProjects();
 
-        // 直接進入新專案
         openProjectDetail(p.id);
       }catch(e){
         msg.textContent = "建立失敗：" + e.message;
       }
     });
 
+    // Init weeks
     $("btnInitWeeks").addEventListener("click", async ()=>{
       await ensureWeeks(currentProject.id);
       await renderWeeks();
     });
 
+    // Save project
     $("btnSaveProject").addEventListener("click", async ()=>{
       const pmsg = $("pmsg");
       pmsg.textContent = "";
@@ -945,8 +946,8 @@
       }
     });
 
+    // New campaign modal open
     $("btnNewCampaign").addEventListener("click", ()=>{
-      // 預填
       $("cName").value = "";
       $("cPlatform").value = currentProject.platforms || "META";
       $("cStore").value = currentProject.store || "勤美";
@@ -961,6 +962,7 @@
       show(modalCampaign);
     });
 
+    // Create campaign
     $("btnCreateCampaign").addEventListener("click", async ()=>{
       const cmsg = $("cmsg");
       cmsg.textContent = "";
@@ -990,6 +992,7 @@
       }
     });
 
+    // Create log
     $("btnCreateLog").addEventListener("click", async ()=>{
       const lmsg = $("lmsg");
       lmsg.textContent = "";
@@ -1012,7 +1015,7 @@
       }
     });
 
-    // ====== Router (hash) ======
+    // Router
     window.addEventListener("hashchange", async ()=>{
       const pid = parseHashProjectId();
       if (pid){
@@ -1024,7 +1027,7 @@
       }
     });
 
-    // ====== Init ======
+    // Init
     (async ()=>{
       const pid = parseHashProjectId();
       if (pid){
