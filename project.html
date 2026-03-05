@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>專案詳情</title>
+  <link rel="stylesheet" href="./style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="title" id="ptitle">專案</h1>
+    <div class="right">
+      <a class="pill" href="./index.html">返回</a>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="panel">
+      <div class="panel-head">
+        <div class="panel-title">專案資訊</div>
+        <div class="panel-actions">
+          <button id="btnInitWeeks" class="pill">一鍵建立 W1~W4</button>
+          <button id="btnSaveProject" class="pill pill-primary">儲存</button>
+        </div>
+      </div>
+
+      <div class="info-grid">
+        <label><div class="label">年度</div><input id="fYear" type="number" /></label>
+        <label><div class="label">專案名稱</div><input id="fTitle" /></label>
+        <label><div class="label">品項</div><input id="fProduct" /></label>
+        <label><div class="label">主題</div><input id="fTheme" /></label>
+        <label><div class="label">平台</div><input id="fPlatforms" /></label>
+        <label><div class="label">門市</div><input id="fStore" /></label>
+        <label><div class="label">目標</div><input id="fObjective" /></label>
+        <label><div class="label">狀態</div><input id="fStatus" /></label>
+        <label><div class="label">開始日</div><input id="fStart" type="date" /></label>
+        <label><div class="label">結束日</div><input id="fEnd" type="date" /></label>
+        <label class="full"><div class="label">備註</div><input id="fNotes" /></label>
+      </div>
+
+      <div id="pmsg" class="msg"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div class="panel-title">W1~W4 投放節奏</div>
+      </div>
+      <div id="weeks" class="stack"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div class="panel-title">活動（Campaigns）</div>
+        <button id="btnNewCampaign" class="pill pill-white">新增活動</button>
+      </div>
+      <div id="campaigns" class="stack"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div class="panel-title">變更紀錄</div>
+      </div>
+      <div id="logs" class="stack"></div>
+    </section>
+  </main>
+
+  <!-- 新增活動 Modal（簡版） -->
+  <div id="cModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div class="modal-title">新增活動</div>
+        <button id="btnCloseCModal" class="pill">關閉</button>
+      </div>
+
+      <div class="form">
+        <label><div class="label">活動名稱</div><input id="cName" placeholder="例如 META_KM_BAT_SPR_MSG_202603" /></label>
+        <div class="form-row">
+          <label><div class="label">平台</div><input id="cPlatform" placeholder="META/GOOGLE" /></label>
+          <label><div class="label">門市</div><input id="cStore" placeholder="勤美/沙鹿" /></label>
+        </div>
+        <div class="form-row">
+          <label><div class="label">品項</div><input id="cProduct" placeholder="電池更換/資料救援..." /></label>
+          <label><div class="label">主題</div><input id="cTheme" placeholder="春天/沙灘/中秋" /></label>
+        </div>
+        <div class="form-row">
+          <label><div class="label">目標</div><input id="cObjective" placeholder="MSG/LEAD/CALL" /></label>
+          <label><div class="label">狀態</div><input id="cStatus" placeholder="規劃中/投放中/結案" /></label>
+        </div>
+        <div class="form-row">
+          <label><div class="label">開始日</div><input id="cStart" type="date" /></label>
+          <label><div class="label">結束日</div><input id="cEnd" type="date" /></label>
+        </div>
+        <label><div class="label">預算備註</div><input id="cBudget" placeholder="每日 300 / 放大到 360" /></label>
+
+        <div class="actions">
+          <button id="btnCreateCampaign" class="pill pill-primary">建立活動</button>
+          <div id="cmsg" class="msg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增變更 Modal -->
+  <div id="lModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div class="modal-title">新增變更紀錄</div>
+        <button id="btnCloseLModal" class="pill">關閉</button>
+      </div>
+
+      <div class="form">
+        <div class="form-row">
+          <label><div class="label">改動類型</div><input id="lType" placeholder="預算/素材/文案..." /></label>
+          <label><div class="label">Before</div><input id="lBefore" /></label>
+        </div>
+        <div class="form-row">
+          <label><div class="label">After</div><input id="lAfter" /></label>
+          <label><div class="label">原因/假設</div><input id="lHypo" /></label>
+        </div>
+
+        <div class="actions">
+          <button id="btnCreateLog" class="pill pill-primary">儲存紀錄</button>
+          <div id="lmsg" class="msg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+  <script>
+    Planner.initProjectDetail();
+  </script>
+</body>
+</html>
