@@ -1,29 +1,23 @@
 :root{
-  /* Brand */
-  --brand: #AE8E53;          /* 你給的主色 */
-  --brand-ink: #6E572C;      /* 深一階用於 hover / 深色字 */
-  --bg: #F6F5F2;             /* 很淡的暖灰，讓白卡更高級 */
+  --brand: #AE8E53;
+  --brand-ink: #6E572C;
+
+  --bg: #F6F5F2;
   --paper: #FFFFFF;
   --paper-2: #FBFAF8;
 
-  /* Text */
   --text: #151515;
   --muted: rgba(21,21,21,.58);
 
-  /* Lines */
   --line: rgba(21,21,21,.08);
   --line-strong: rgba(21,21,21,.12);
 
-  /* Shadow (高級：不髒、不黑) */
   --shadow-1: 0 10px 28px rgba(0,0,0,.06);
   --shadow-2: 0 18px 52px rgba(0,0,0,.10);
 
-  /* Radius */
   --r-xl: 26px;
   --r-lg: 18px;
-  --r-md: 14px;
 
-  /* Focus */
   --focus: rgba(174,142,83,.22);
 }
 
@@ -45,14 +39,12 @@ body{
   background: rgba(246,245,242,.92);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
-
   padding: 18px 20px 14px;
   display:flex;
   align-items:flex-end;
   justify-content:space-between;
   gap: 14px;
 }
-
 .title-block{display:flex;flex-direction:column;gap:6px}
 .kicker{
   font-size: 12px;
@@ -104,12 +96,8 @@ body{
   border-color: var(--brand-ink);
   box-shadow: 0 18px 42px rgba(110,87,44,.26);
 }
-.pill-ghost{
-  background: transparent;
-  box-shadow: none;
-}
 
-/* Filter pill */
+/* Toolbar */
 .toolbar{position:relative;margin:14px 0 18px;display:flex}
 .pill-filter{
   min-width: 240px;
@@ -166,8 +154,6 @@ body{
   position: relative;
   overflow: hidden;
 }
-
-/* 低調品牌光澤線（高級感重點） */
 .card::before{
   content:"";
   position:absolute;
@@ -176,13 +162,11 @@ body{
   pointer-events:none;
   opacity: .9;
 }
-
 .card:hover{
   transform: translateY(-2px);
   box-shadow: var(--shadow-2);
   border-color: rgba(174,142,83,.20);
 }
-
 .card .big{
   font-size: 22px;
   font-weight: 950;
@@ -196,7 +180,7 @@ body{
   line-height: 1.65;
 }
 
-/* ===== Panels (detail page) ===== */
+/* ===== Panels ===== */
 .panel{
   background: var(--paper);
   border: 1px solid rgba(21,21,21,.06);
@@ -219,7 +203,7 @@ body{
 }
 .panel-actions{display:flex;gap:10px;flex-wrap:wrap}
 
-/* ===== Inputs ===== */
+/* Inputs */
 .label{
   font-size: 12px;
   color: rgba(21,21,21,.55);
@@ -252,7 +236,7 @@ input:focus, select:focus{
 
 .stack{display:flex;flex-direction:column;gap:12px}
 
-/* ===== List Items ===== */
+/* List items */
 .item{
   background: var(--paper);
   border: 1px solid rgba(21,21,21,.06);
@@ -272,7 +256,7 @@ input:focus, select:focus{
 }
 .item .actions{display:flex;gap:10px;flex-wrap:wrap}
 
-/* ===== Modal (修正卡住 + 高級感) ===== */
+/* ===== Modal (可捲動、不會卡、可點背景關) ===== */
 .modal{
   position: fixed;
   inset: 0;
@@ -297,18 +281,23 @@ input:focus, select:focus{
   -webkit-overflow-scrolling: touch;
 }
 .modal-head{
+  position: sticky;
+  top: 0;
+  background: var(--paper);
+  padding-bottom: 10px;
   display:flex;
   justify-content:space-between;
   align-items:center;
   gap:12px;
   margin-bottom: 12px;
+  border-bottom: 1px solid rgba(21,21,21,.06);
 }
 .modal-title{
   font-size: 18px;
   font-weight: 950;
 }
 
-/* 表單排版 */
+/* Form layout */
 .form{display:flex;flex-direction:column;gap:12px}
 .form-row{
   display:grid;
