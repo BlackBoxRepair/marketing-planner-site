@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>行銷廣告專案計劃表</title>
 
-  <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -41,6 +40,8 @@
       -webkit-font-smoothing: antialiased;
       letter-spacing: .2px;
     }
+
+    .hidden{display:none !important;}
 
     .topbar{
       position: sticky;
@@ -128,7 +129,6 @@
       padding: 8px;
       z-index: 40;
     }
-    .hidden{display:none}
     .dropdown-item{
       padding: 10px 12px;
       border-radius: 14px;
@@ -264,21 +264,28 @@
     .item .actions{display:flex;gap:10px;flex-wrap:wrap}
 
     .msg{font-size:12px;color:rgba(21,21,21,.6)}
+    .alert{
+      background: #fff;
+      border: 1px solid rgba(21,21,21,.10);
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: var(--shadow-1);
+      margin: 10px 0 18px;
+      color: rgba(21,21,21,.75);
+      line-height: 1.6;
+    }
 
-    /* ====== Modal：修正「一半動不了」的核心 ======
-       外層不捲動，只有卡片內捲動；取消 sticky；z-index 拉到最上層 */
+    /* ===== Modal：穩定版（不會一半不能點） ===== */
     .modal{
       position: fixed;
       inset: 0;
       z-index: 9999;
       background: rgba(0,0,0,.22);
-
       display:flex;
       align-items:center;
       justify-content:center;
-
       padding: 18px;
-      overflow: hidden;     /* ✅ 外層不要滾，避免事件被吃掉 */
+      overflow: hidden; /* 外層不滾 */
     }
     .modal-card{
       width: min(920px, 100%);
@@ -286,23 +293,19 @@
       border: 1px solid rgba(21,21,21,.10);
       border-radius: var(--r-xl);
       box-shadow: var(--shadow-2);
-
       max-height: calc(100vh - 36px);
-      overflow: auto;       /* ✅ 只讓卡片內捲動 */
+      overflow: auto; /* 只讓卡片內滾 */
       -webkit-overflow-scrolling: touch;
-
       padding: 18px;
-      position: relative;
     }
     .modal-head{
-      position: static;     /* ✅ 不用 sticky，避免遮擋點擊 */
-      background: transparent;
-      padding-bottom: 10px;
+      position: static; /* 不用 sticky，避免點擊被遮 */
       display:flex;
       justify-content:space-between;
       align-items:center;
       gap:12px;
       margin-bottom: 12px;
+      padding-bottom: 10px;
       border-bottom: 1px solid rgba(21,21,21,.06);
     }
     .modal-title{font-size: 18px;font-weight: 950;}
@@ -314,14 +317,10 @@
     }
     @media(max-width:900px){ .form-row{ grid-template-columns: 1fr; } }
     .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-
-    /* View switch */
-    .view.hidden{display:none}
   </style>
 </head>
 <body>
 
-  <!-- Topbar -->
   <header class="topbar">
     <div class="title-block">
       <div class="kicker" id="kicker">MARKETING</div>
@@ -334,8 +333,10 @@
   </header>
 
   <main class="page">
-    <!-- View 1: 專案卡片牆 -->
-    <section id="viewProjects" class="view">
+    <div id="sysMsg" class="alert hidden"></div>
+
+    <!-- ✅ 初始只顯示這個：專案卡片牆 -->
+    <section id="viewProjects">
       <section class="toolbar">
         <div class="pill pill-filter" id="yearPill">年度篩選器</div>
         <div id="yearDropdown" class="dropdown hidden">
@@ -343,12 +344,11 @@
           <div id="yearOptions"></div>
         </div>
       </section>
-
       <section id="grid" class="grid"></section>
     </section>
 
-    <!-- View 2: 專案詳情 -->
-    <section id="viewProjectDetail" class="view hidden">
+    <!-- ✅ 初始必定 hidden：專案詳情 -->
+    <section id="viewProjectDetail" class="hidden">
       <section class="panel">
         <div class="panel-head">
           <div class="panel-title">專案資訊</div>
@@ -379,9 +379,7 @@
       </section>
 
       <section class="panel">
-        <div class="panel-head">
-          <div class="panel-title">W1~W4 投放節奏</div>
-        </div>
+        <div class="panel-head"><div class="panel-title">W1~W4 投放節奏</div></div>
         <div id="weeks" class="stack"></div>
       </section>
 
@@ -394,9 +392,7 @@
       </section>
 
       <section class="panel">
-        <div class="panel-head">
-          <div class="panel-title">變更紀錄</div>
-        </div>
+        <div class="panel-head"><div class="panel-title">變更紀錄</div></div>
         <div id="logs" class="stack"></div>
       </section>
     </section>
@@ -409,17 +405,9 @@
         <div class="modal-title">新增專案</div>
         <button id="btnCloseProjectModal" class="pill">關閉</button>
       </div>
-
       <div class="form">
-        <label>
-          <div class="label">年度</div>
-          <input id="pYear" type="number" placeholder="例如 2026" />
-        </label>
-
-        <label>
-          <div class="label">專案名稱（卡片大字）</div>
-          <input id="pTitle" placeholder="例如：春天｜電池更換｜訊息主力" />
-        </label>
+        <label><div class="label">年度</div><input id="pYear" type="number" placeholder="例如 2026" /></label>
+        <label><div class="label">專案名稱（卡片大字）</div><input id="pTitle" placeholder="例如：春天｜電池更換｜訊息主力" /></label>
 
         <div class="form-row">
           <label>
@@ -432,11 +420,7 @@
               <option value="Switch維修">Switch維修</option>
             </select>
           </label>
-
-          <label>
-            <div class="label">主題</div>
-            <input id="pTheme" placeholder="春天 / 沙灘 / 中秋" />
-          </label>
+          <label><div class="label">主題</div><input id="pTheme" placeholder="春天 / 沙灘 / 中秋" /></label>
         </div>
 
         <div class="form-row">
@@ -448,7 +432,6 @@
               <option value="META,GOOGLE">META + GOOGLE</option>
             </select>
           </label>
-
           <label>
             <div class="label">門市</div>
             <select id="pStore">
@@ -468,7 +451,6 @@
               <option value="CALL">CALL（來電）</option>
             </select>
           </label>
-
           <label>
             <div class="label">狀態</div>
             <select id="pStatus">
@@ -480,20 +462,11 @@
         </div>
 
         <div class="form-row">
-          <label>
-            <div class="label">開始日</div>
-            <input id="pStart" type="date" />
-          </label>
-          <label>
-            <div class="label">結束日</div>
-            <input id="pEnd" type="date" />
-          </label>
+          <label><div class="label">開始日</div><input id="pStart" type="date" /></label>
+          <label><div class="label">結束日</div><input id="pEnd" type="date" /></label>
         </div>
 
-        <label>
-          <div class="label">備註</div>
-          <input id="pNotes" placeholder="可留空" />
-        </label>
+        <label><div class="label">備註</div><input id="pNotes" placeholder="可留空" /></label>
 
         <div class="actions">
           <button id="btnCreateProject" class="pill pill-primary">建立專案</button>
@@ -513,29 +486,23 @@
 
       <div class="form">
         <label><div class="label">活動名稱</div><input id="cName" placeholder="例如 META_KM_BAT_SPR_MSG_202603" /></label>
-
         <div class="form-row">
           <label><div class="label">平台</div><input id="cPlatform" placeholder="META/GOOGLE" /></label>
           <label><div class="label">門市</div><input id="cStore" placeholder="勤美/沙鹿" /></label>
         </div>
-
         <div class="form-row">
           <label><div class="label">品項</div><input id="cProduct" placeholder="電池更換/資料救援..." /></label>
           <label><div class="label">主題</div><input id="cTheme" placeholder="春天/沙灘/中秋" /></label>
         </div>
-
         <div class="form-row">
           <label><div class="label">目標</div><input id="cObjective" placeholder="MSG/LEAD/CALL" /></label>
           <label><div class="label">狀態</div><input id="cStatus" placeholder="規劃中/投放中/結案" /></label>
         </div>
-
         <div class="form-row">
           <label><div class="label">開始日</div><input id="cStart" type="date" /></label>
           <label><div class="label">結束日</div><input id="cEnd" type="date" /></label>
         </div>
-
         <label><div class="label">預算備註</div><input id="cBudget" placeholder="每日 300 / 放大到 360" /></label>
-
         <div class="actions">
           <button id="btnCreateCampaign" class="pill pill-primary">建立活動</button>
           <div id="cmsg" class="msg"></div>
@@ -557,12 +524,10 @@
           <label><div class="label">改動類型</div><input id="lType" placeholder="預算/素材/文案..." /></label>
           <label><div class="label">Before</div><input id="lBefore" /></label>
         </div>
-
         <div class="form-row">
           <label><div class="label">After</div><input id="lAfter" /></label>
           <label><div class="label">原因/假設</div><input id="lHypo" /></label>
         </div>
-
         <div class="actions">
           <button id="btnCreateLog" class="pill pill-primary">儲存紀錄</button>
           <div id="lmsg" class="msg"></div>
@@ -574,39 +539,75 @@
   <script>
     /* ========= 你只要改這兩行 ========= */
     const SUPABASE_URL = "https://udycidkswyqasnzwlmqv.supabase.co";
-    const SUPABASE_ANON_KEY = "貼上你的 anon public key";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkeWNpZGtzd3lxYXNuendsbXF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODYzNzUsImV4cCI6MjA4ODI2MjM3NX0.Gu68eely_7xJrRBAuevEXzPt93Hnzr1fVwnz3SSp3pk ";
     /* ================================= */
-
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const $ = (id) => document.getElementById(id);
     const esc = (s="") => String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+    const hasKey = () => SUPABASE_ANON_KEY && SUPABASE_ANON_KEY.length > 30 && !SUPABASE_ANON_KEY.includes("貼上你的");
 
-    const viewProjects = $("viewProjects");
-    const viewProjectDetail = $("viewProjectDetail");
-
-    const topTitle = $("topTitle");
-    const kicker = $("kicker");
-    const btnBack = $("btnBack");
-    const btnOpenNewProject = $("btnOpenNewProject");
-
-    const modalProject = $("modalProject");
-    const modalCampaign = $("modalCampaign");
-    const modalLog = $("modalLog");
+    let supabase = null;
 
     function show(el){ el.classList.remove("hidden"); }
     function hide(el){ el.classList.add("hidden"); }
 
-    function openProjectDetail(projectId){
-      location.hash = `#project=${encodeURIComponent(projectId)}`;
+    function setSystemMsg(text){
+      const box = $("sysMsg");
+      if (!text){ hide(box); box.textContent=""; return; }
+      box.textContent = text;
+      show(box);
     }
-    function backToList(){ location.hash = ""; }
+
+    // ===== 視圖切換：保證不會兩個 view 疊在一起 =====
+    function showListView(){
+      $("kicker").textContent = "MARKETING";
+      $("topTitle").textContent = "行銷廣告專案計劃表";
+      hide($("btnBack"));
+      show($("btnOpenNewProject"));
+
+      show($("viewProjects"));
+      hide($("viewProjectDetail"));
+    }
+    function showDetailView(title){
+      $("kicker").textContent = "PROJECT";
+      $("topTitle").textContent = title || "專案";
+      show($("btnBack"));
+      hide($("btnOpenNewProject"));
+
+      hide($("viewProjects"));
+      show($("viewProjectDetail"));
+    }
+
     function parseHashProjectId(){
       const h = location.hash || "";
       const m = h.match(/#project=([^&]+)/);
       return m ? decodeURIComponent(m[1]) : null;
     }
+    function openProjectDetail(projectId){
+      location.hash = `#project=${encodeURIComponent(projectId)}`;
+    }
+    function backToList(){ location.hash = ""; }
 
+    // ===== Modal：關閉（按鈕/背景/ESC）=====
+    function setupModal(modalId, closeBtnId){
+      const modal = $(modalId);
+      $(closeBtnId).addEventListener("click", ()=> hide(modal));
+      modal.addEventListener("click",(e)=>{ if (e.target === modal) hide(modal); });
+      return modal;
+    }
+    const modalProject = setupModal("modalProject","btnCloseProjectModal");
+    const modalCampaign = setupModal("modalCampaign","btnCloseCampaignModal");
+    const modalLog = setupModal("modalLog","btnCloseLogModal");
+
+    document.addEventListener("keydown",(e)=>{
+      if (e.key !== "Escape") return;
+      if (!modalProject.classList.contains("hidden")) hide(modalProject);
+      if (!modalCampaign.classList.contains("hidden")) hide(modalCampaign);
+      if (!modalLog.classList.contains("hidden")) hide(modalLog);
+      if (!$("yearDropdown").classList.contains("hidden")) hide($("yearDropdown"));
+    });
+
+    // ===== Supabase API =====
     async function listProjects(year){
       let q = supabase.from("projects").select("*").order("created_at",{ascending:false});
       if (year && year !== "ALL") q = q.eq("year", Number(year));
@@ -635,7 +636,6 @@
       return data;
     }
 
-    /* playbook */
     async function listWeeks(project_id){
       const { data, error } = await supabase.from("playbook_weeks")
         .select("*").eq("project_id", project_id).order("week",{ascending:true});
@@ -656,7 +656,6 @@
       if (error) throw error;
     }
 
-    /* campaigns */
     async function listCampaigns(project_id){
       const { data, error } = await supabase.from("campaigns")
         .select("*").eq("project_id", project_id).order("created_at",{ascending:false});
@@ -669,7 +668,6 @@
       return data;
     }
 
-    /* logs */
     async function listLogs(project_id){
       const camps = await listCampaigns(project_id);
       const ids = camps.map(c=>c.id);
@@ -686,20 +684,20 @@
       return data;
     }
 
-    // ===== UI State =====
+    // ===== UI render =====
     let currentYear = "ALL";
     let currentProject = null;
 
     async function renderYears(){
-      const dropdown = $("yearDropdown");
+      const dd = $("yearDropdown");
       const yearOptions = $("yearOptions");
       const years = await listYears();
       yearOptions.innerHTML = years.map(y=>`<div class="dropdown-item" data-year="${y}">${y}</div>`).join("");
 
-      dropdown.querySelectorAll(".dropdown-item").forEach(el=>{
+      dd.querySelectorAll(".dropdown-item").forEach(el=>{
         el.onclick = async ()=>{
           currentYear = el.dataset.year;
-          hide(dropdown);
+          hide(dd);
           await renderProjects();
         };
       });
@@ -708,6 +706,16 @@
     async function renderProjects(){
       const grid = $("grid");
       const projects = await listProjects(currentYear);
+
+      if (!projects.length){
+        grid.innerHTML = `
+          <div class="card" style="grid-column:1/-1; cursor:default;">
+            <div class="big">尚無專案</div>
+            <div class="meta">點右上角「新增專案按鈕」建立第一個專案。</div>
+          </div>`;
+        return;
+      }
+
       grid.innerHTML = projects.map(p=>`
         <div class="card" data-id="${p.id}">
           <div class="big">${esc(p.title)}</div>
@@ -719,47 +727,9 @@
         </div>
       `).join("");
 
-      grid.querySelectorAll(".card").forEach(c=>{
+      grid.querySelectorAll(".card[data-id]").forEach(c=>{
         c.onclick = ()=> openProjectDetail(c.dataset.id);
       });
-    }
-
-    function showProjectsView(){
-      kicker.textContent = "MARKETING";
-      topTitle.textContent = "行銷廣告專案計劃表";
-      btnBack.classList.add("hidden");
-      btnOpenNewProject.classList.remove("hidden");
-      viewProjectDetail.classList.add("hidden");
-      viewProjects.classList.remove("hidden");
-    }
-
-    async function loadProjectDetail(projectId){
-      currentProject = await getProject(projectId);
-
-      kicker.textContent = "PROJECT";
-      topTitle.textContent = currentProject.title;
-      btnBack.classList.remove("hidden");
-      btnOpenNewProject.classList.add("hidden");
-
-      viewProjects.classList.add("hidden");
-      viewProjectDetail.classList.remove("hidden");
-
-      $("fYear").value = currentProject.year || "";
-      $("fTitle").value = currentProject.title || "";
-      $("fProduct").value = currentProject.product || "";
-      $("fTheme").value = currentProject.theme || "";
-      $("fPlatforms").value = currentProject.platforms || "";
-      $("fStore").value = currentProject.store || "";
-      $("fObjective").value = currentProject.objective || "";
-      $("fStatus").value = currentProject.status || "";
-      $("fStart").value = currentProject.start_date || "";
-      $("fEnd").value = currentProject.end_date || "";
-      $("fNotes").value = currentProject.notes || "";
-      $("pmsg").textContent = "";
-
-      await renderWeeks();
-      await renderCampaigns();
-      await renderLogs();
     }
 
     async function renderWeeks(){
@@ -815,7 +785,7 @@
           </div>
         `;
         el.querySelector("[data-log]").onclick = ()=>{
-          modalLog.dataset.cid = c.id;
+          $("modalLog").dataset.cid = c.id;
           show(modalLog);
         };
         wrap.appendChild(el);
@@ -846,41 +816,43 @@
       });
     }
 
-    // ===== Modal 關閉（按鈕/背景/ESC）=====
-    function setupModal(modalEl, closeBtnId){
-      const closeBtn = document.getElementById(closeBtnId);
-      closeBtn?.addEventListener("click", ()=> hide(modalEl));
-      modalEl.addEventListener("click",(e)=>{ if (e.target === modalEl) hide(modalEl); });
+    async function loadProjectDetail(projectId){
+      currentProject = await getProject(projectId);
+
+      showDetailView(currentProject.title);
+
+      $("fYear").value = currentProject.year || "";
+      $("fTitle").value = currentProject.title || "";
+      $("fProduct").value = currentProject.product || "";
+      $("fTheme").value = currentProject.theme || "";
+      $("fPlatforms").value = currentProject.platforms || "";
+      $("fStore").value = currentProject.store || "";
+      $("fObjective").value = currentProject.objective || "";
+      $("fStatus").value = currentProject.status || "";
+      $("fStart").value = currentProject.start_date || "";
+      $("fEnd").value = currentProject.end_date || "";
+      $("fNotes").value = currentProject.notes || "";
+      $("pmsg").textContent = "";
+
+      await renderWeeks();
+      await renderCampaigns();
+      await renderLogs();
     }
-    setupModal(modalProject, "btnCloseProjectModal");
-    setupModal(modalCampaign, "btnCloseCampaignModal");
-    setupModal(modalLog, "btnCloseLogModal");
 
-    document.addEventListener("keydown",(e)=>{
-      if (e.key !== "Escape") return;
-      if (!modalProject.classList.contains("hidden")) hide(modalProject);
-      if (!modalCampaign.classList.contains("hidden")) hide(modalCampaign);
-      if (!modalLog.classList.contains("hidden")) hide(modalLog);
-      const dd = $("yearDropdown");
-      if (!dd.classList.contains("hidden")) hide(dd);
-    });
+    // ===== wiring =====
+    $("btnBack").onclick = ()=> backToList();
+    $("btnOpenNewProject").onclick = ()=> show(modalProject);
 
-    // Dropdown
-    $("yearPill").addEventListener("click", ()=>{
+    $("yearPill").onclick = ()=>{
       const dd = $("yearDropdown");
       dd.classList.contains("hidden") ? show(dd) : hide(dd);
-    });
+    };
     document.addEventListener("click",(e)=>{
       const dd = $("yearDropdown");
       if (!dd.contains(e.target) && e.target !== $("yearPill")) hide(dd);
     });
 
-    // Top buttons
-    btnOpenNewProject.addEventListener("click", ()=> show(modalProject));
-    btnBack.addEventListener("click", ()=> backToList());
-
-    // Create project
-    $("btnCreateProject").addEventListener("click", async ()=>{
+    $("btnCreateProject").onclick = async ()=>{
       const msg = $("msg");
       msg.textContent = "";
 
@@ -912,16 +884,14 @@
       }catch(e){
         msg.textContent = "建立失敗：" + e.message;
       }
-    });
+    };
 
-    // Init weeks
-    $("btnInitWeeks").addEventListener("click", async ()=>{
+    $("btnInitWeeks").onclick = async ()=>{
       await ensureWeeks(currentProject.id);
       await renderWeeks();
-    });
+    };
 
-    // Save project
-    $("btnSaveProject").addEventListener("click", async ()=>{
+    $("btnSaveProject").onclick = async ()=>{
       const pmsg = $("pmsg");
       pmsg.textContent = "";
       try{
@@ -938,16 +908,15 @@
           end_date: $("fEnd").value || null,
           notes: $("fNotes").value.trim(),
         });
-        topTitle.textContent = currentProject.title;
+        $("topTitle").textContent = currentProject.title;
         pmsg.textContent = "已儲存 ✅";
         setTimeout(()=>pmsg.textContent="",1200);
       }catch(e){
         pmsg.textContent = "儲存失敗：" + e.message;
       }
-    });
+    };
 
-    // New campaign modal open
-    $("btnNewCampaign").addEventListener("click", ()=>{
+    $("btnNewCampaign").onclick = ()=>{
       $("cName").value = "";
       $("cPlatform").value = currentProject.platforms || "META";
       $("cStore").value = currentProject.store || "勤美";
@@ -960,10 +929,9 @@
       $("cBudget").value = "";
       $("cmsg").textContent = "";
       show(modalCampaign);
-    });
+    };
 
-    // Create campaign
-    $("btnCreateCampaign").addEventListener("click", async ()=>{
+    $("btnCreateCampaign").onclick = async ()=>{
       const cmsg = $("cmsg");
       cmsg.textContent = "";
       const campaign_name = $("cName").value.trim();
@@ -990,13 +958,12 @@
       }catch(e){
         cmsg.textContent="建立失敗：" + e.message;
       }
-    });
+    };
 
-    // Create log
-    $("btnCreateLog").addEventListener("click", async ()=>{
+    $("btnCreateLog").onclick = async ()=>{
       const lmsg = $("lmsg");
       lmsg.textContent = "";
-      const cid = modalLog.dataset.cid;
+      const cid = $("modalLog").dataset.cid;
       if (!cid){ lmsg.textContent="請先從活動點『新增變更』"; return; }
 
       try{
@@ -1013,29 +980,44 @@
       }catch(e){
         lmsg.textContent="儲存失敗：" + e.message;
       }
-    });
+    };
 
     // Router
     window.addEventListener("hashchange", async ()=>{
       const pid = parseHashProjectId();
-      if (pid){
-        await loadProjectDetail(pid);
-      }else{
-        showProjectsView();
-        await renderYears();
-        await renderProjects();
+      try{
+        if (pid){
+          await loadProjectDetail(pid);
+        }else{
+          showListView();
+          await renderYears();
+          await renderProjects();
+        }
+      }catch(err){
+        showListView();
+        setSystemMsg("資料載入失敗（請檢查 Supabase Key / RLS / 網路）： " + err.message);
       }
     });
 
-    // Init
+    // Init（最重要：先固定 view，再做任何資料請求）
     (async ()=>{
-      const pid = parseHashProjectId();
-      if (pid){
-        await loadProjectDetail(pid);
-      }else{
-        showProjectsView();
-        await renderYears();
-        await renderProjects();
+      showListView(); // ✅ 先保證畫面一定合理
+      if (!hasKey()){
+        setSystemMsg("你尚未填入 SUPABASE_ANON_KEY（匿名金鑰）。請在 index.html 內貼上 anon public key 後再重新整理。");
+        return;
+      }
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      try{
+        const pid = parseHashProjectId();
+        if (pid){
+          await loadProjectDetail(pid);
+        }else{
+          await renderYears();
+          await renderProjects();
+        }
+      }catch(err){
+        setSystemMsg("資料載入失敗（請檢查 Supabase Key / RLS / 網路）： " + err.message);
       }
     })();
   </script>
