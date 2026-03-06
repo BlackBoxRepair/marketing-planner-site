@@ -19,16 +19,27 @@
     .card:hover { border-color: var(--brand); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
     .hidden { display: none !important; }
     
-    /* 彈窗優化 */
+    /* 彈窗樣式優化 */
     .modal { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px); }
     .modal-content { background: #fff; width: 100%; max-width: 700px; border-radius: var(--r); padding: 30px; box-shadow: 0 25px 50px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto; }
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
     .full { grid-column: 1 / -1; }
-    .form-group { margin-bottom: 4px; }
-    label { display: block; font-size: 12px; font-weight: 900; color: #888; margin-bottom: 6px; }
-    input, select, textarea { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--line); outline: none; background: #fafafa; transition: 0.2s; font-size: 14px; }
-    input:focus, select:focus { border-color: var(--brand); background: #fff; }
+    label { display: block; font-size: 14px; font-weight: 900; color: #444; margin-bottom: 6px; }
+    label span { font-size: 10px; color: #aaa; font-weight: normal; margin-left: 4px; }
+    input, select, textarea { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--line); outline: none; background: #fafafa; font-size: 14px; }
+    
+    /* 多選清單樣式 */
+    .checkbox-group { display: flex; gap: 12px; flex-wrap: wrap; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: #fafafa; }
+    .checkbox-item { display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
+    .checkbox-item input { width: auto; cursor: pointer; }
+
+    /* 狀態燈號樣式 */
+    .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
+    .dot-blue { background: #3498db; }
+    .dot-green { background: #2ecc71; }
+    .dot-grey { background: #95a5a6; }
+    .dot-red { background: #e74c3c; }
   </style>
 </head>
 <body>
@@ -43,29 +54,52 @@
 
   <main>
     <div id="listPage" class="grid">載入中...</div>
-    <div id="detailPage" class="hidden" style="background:#fff; padding:24px; border-radius:var(--r); border:1px solid var(--line);">
-      </div>
   </main>
 
   <div id="addModal" class="modal hidden">
     <div class="modal-content">
-      <h2 style="margin-top:0; font-size: 24px;">建立全新維修專案</h2>
+      <h2 style="margin-top:0; font-size: 24px;">新建專案</h2>
       <div class="form-grid">
-        <div class="form-group full"><label>專案名稱 (TITLE)</label><input id="pTitle" placeholder="如：2026 春季 iPhone 電池更換特惠"></div>
-        <div class="form-group"><label>年度 (YEAR)</label><input type="number" id="pYear" value="2026"></div>
-        <div class="form-group"><label>維修品項 (PRODUCT)</label><input id="pProduct" placeholder="電池更換/資料救援..."></div>
-        <div class="form-group"><label>行銷主題 (THEME)</label><input id="pTheme" placeholder="春天/沙灘/中秋..."></div>
-        <div class="form-group"><label>投放平台 (PLATFORMS)</label><input id="pPlatforms" placeholder="META, GOOGLE"></div>
-        <div class="form-group"><label>執行門市 (STORE)</label><select id="pStore"><option value="勤美公益店">勤美公益店</option><option value="沙鹿站前店">沙鹿站前店</option><option value="全門市">全門市</option></select></div>
-        <div class="form-group"><label>行銷目標 (OBJECTIVE)</label><input id="pObjective" placeholder="MSG/LEAD/CALL"></div>
-        <div class="form-group"><label>專案狀態 (STATUS)</label><select id="pStatus"><option value="規劃中">規劃中</option><option value="投放中">投放中</option><option value="結案">結案</option></select></div>
-        <div class="form-group"><label>開始日期 (START_DATE)</label><input type="date" id="pStart"></div>
-        <div class="form-group"><label>結束日期 (END_DATE)</label><input type="date" id="pEnd"></div>
-        <div class="form-group full"><label>專案備註 (NOTES)</label><textarea id="pNotes" rows="2"></textarea></div>
+        <div class="form-group full"><label>專案名稱<span>TITLE</span></label><input id="pTitle" placeholder="如：2026 春季 iPhone 電池更換特惠"></div>
+        <div class="form-group"><label>年度<span>YEAR</span></label><input type="number" id="pYear" value="2026"></div>
+        <div class="form-group"><label>主打項目<span>PRODUCT</span></label><input id="pProduct" placeholder="電池更換/資料救援..."></div>
+        <div class="form-group"><label>行銷主題<span>THEME</span></label><input id="pTheme" placeholder="春天/沙灘/中秋..."></div>
+        
+        <div class="form-group full">
+          <label>投放平台<span>PLATFORMS</span></label>
+          <div class="checkbox-group" id="pPlatformsGroup">
+            <label class="checkbox-item"><input type="checkbox" name="platform" value="META"> META</label>
+            <label class="checkbox-item"><input type="checkbox" name="platform" value="GOOGLE"> GOOGLE</label>
+            <label class="checkbox-item"><input type="checkbox" name="platform" value="LINE"> LINE</label>
+            <label class="checkbox-item"><input type="checkbox" name="platform" value="TIKTOK"> TIKTOK</label>
+          </div>
+        </div>
+
+        <div class="form-group full">
+          <label>執行門市<span>STORE</span></label>
+          <div class="checkbox-group" id="pStoreGroup">
+            <label class="checkbox-item"><input type="checkbox" name="store" value="勤美公益店"> 勤美公益店</label>
+            <label class="checkbox-item"><input type="checkbox" name="store" value="沙鹿站前店"> 沙鹿站前店</label>
+          </div>
+        </div>
+
+        <div class="form-group"><label>行銷目標<span>OBJECTIVE</span></label><input id="pObjective" placeholder="MSG/LEAD/CALL"></div>
+        <div class="form-group">
+          <label>專案狀態<span>STATUS</span></label>
+          <select id="pStatus">
+            <option value="規劃中">🔵 規劃中</option>
+            <option value="投放中">🟢 投放中</option>
+            <option value="調整中">🔴 調整中</option>
+            <option value="結案">⚪ 結案</option>
+          </select>
+        </div>
+        <div class="form-group"><label>開始日期<span>START_DATE</span></label><input type="date" id="pStart"></div>
+        <div class="form-group"><label>結束日期<span>END_DATE</span></label><input type="date" id="pEnd"></div>
+        <div class="form-group full"><label>專案備註<span>NOTES</span></label><textarea id="pNotes" rows="2"></textarea></div>
       </div>
       <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:24px;">
         <button id="btnCancel" class="btn">取消</button>
-        <button id="btnConfirm" class="btn primary">確認建立專案</button>
+        <button id="btnConfirm" class="btn primary">建立專案</button>
       </div>
     </div>
   </div>
@@ -84,61 +118,66 @@
         listPage.innerHTML = '正在讀取行銷看板...';
         const { data, error } = await client.from('projects').select('*').order('created_at', { ascending: false });
         if (error) { listPage.innerHTML = '讀取失敗'; return; }
-        listPage.innerHTML = data.map(p => `
-          <div class="card" onclick="alert('專案 ID: ${p.id}\\n目前功能：新增完成！')">
+        
+        listPage.innerHTML = data.map(p => {
+          let dotClass = 'dot-grey';
+          if(p.status === '規劃中') dotClass = 'dot-blue';
+          if(p.status === '投放中') dotClass = 'dot-green';
+          if(p.status === '調整中') dotClass = 'dot-red';
+
+          return `
+          <div class="card" onclick="alert('專案 ID: ${p.id}')">
             <div style="font-weight:900; font-size:18px; margin-bottom:8px;">${p.title}</div>
             <div style="font-size:12px; color:#888;">
-              📍 ${p.store} | 🛠️ ${p.product || '未設定'}<br>
+              📍 ${p.store || '未設定'} | 🛠️ ${p.product || '未設定'}<br>
               📅 ${p.start_date || '-'} ~ ${p.end_date || '-'}<br>
-              <span style="display:inline-block; margin-top:8px; padding:2px 8px; border-radius:4px; background:#f0f0f0; color:var(--brand); font-weight:bold;">${p.status}</span>
+              <div style="margin-top:8px; display:flex; align-items:center;">
+                <span class="status-dot ${dotClass}"></span>
+                <span style="font-weight:bold; color:#555;">${p.status}</span>
+              </div>
             </div>
           </div>
-        `).join('') || '目前沒有專案';
+        `}).join('') || '目前沒有專案';
       }
 
-      // 按鈕控制
       btnOpenAdd.onclick = () => addModal.classList.remove('hidden');
       document.getElementById('btnCancel').onclick = () => addModal.classList.add('hidden');
 
-      // 對照資料庫對應項目的儲存邏輯
       document.getElementById('btnConfirm').onclick = async () => {
         const btn = document.getElementById('btnConfirm');
-        btn.disabled = true;
-        btn.innerText = '正在寫入資料庫...';
+        
+        // 取得多選平台的資料
+        const platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(i => i.value).join(', ');
+        // 取得多選門市的資料
+        const stores = Array.from(document.querySelectorAll('input[name="store"]:checked')).map(i => i.value).join(', ');
 
         const projectData = {
           title: document.getElementById('pTitle').value,
           year: parseInt(document.getElementById('pYear').value),
           product: document.getElementById('pProduct').value,
           theme: document.getElementById('pTheme').value,
-          platforms: document.getElementById('pPlatforms').value,
-          store: document.getElementById('pStore').value,
+          platforms: platforms,
+          store: stores,
           objective: document.getElementById('pObjective').value,
-          status: document.getElementById('pStatus').value,
+          status: document.getElementById('pStatus').value.replace(/[🔵🟢🔴⚪]\s/, ""), // 移除 Emoji 存入資料庫
           start_date: document.getElementById('pStart').value || null,
           end_date: document.getElementById('pEnd').value || null,
           notes: document.getElementById('pNotes').value
         };
 
-        if(!projectData.title) {
-          alert('專案名稱必填！');
-          btn.disabled = false;
-          btn.innerText = '確認建立專案';
-          return;
-        }
+        if(!projectData.title) return alert('專案名稱必填！');
 
+        btn.disabled = true;
         const { error } = await client.from('projects').insert([projectData]);
         
-        if (error) {
-          alert('儲存失敗：' + error.message);
-        } else {
+        if (error) alert('儲存失敗：' + error.message);
+        else {
           addModal.classList.add('hidden');
-          // 清空表單
-          document.querySelectorAll('#addModal input, #addModal textarea').forEach(i => i.value = '');
+          document.querySelectorAll('#addModal input[type="text"], #addModal input[type="number"], #addModal textarea').forEach(i => i.value = '');
+          document.querySelectorAll('#addModal input[type="checkbox"]').forEach(i => i.checked = false);
           fetchAll();
         }
         btn.disabled = false;
-        btn.innerText = '確認建立專案';
       };
 
       fetchAll();
