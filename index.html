@@ -19,27 +19,26 @@
     .card:hover { border-color: var(--brand); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
     .hidden { display: none !important; }
     
-    /* 彈窗樣式優化 */
+    /* 彈窗樣式 */
     .modal { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px); }
     .modal-content { background: #fff; width: 100%; max-width: 700px; border-radius: var(--r); padding: 30px; box-shadow: 0 25px 50px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto; }
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
     .full { grid-column: 1 / -1; }
     label { display: block; font-size: 14px; font-weight: 900; color: #444; margin-bottom: 6px; }
-    label span { font-size: 10px; color: #aaa; font-weight: normal; margin-left: 4px; }
+    label span { font-size: 10px; color: #aaa; font-weight: normal; margin-left: 4px; text-transform: uppercase; }
     input, select, textarea { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--line); outline: none; background: #fafafa; font-size: 14px; }
     
-    /* 多選清單樣式 */
+    /* 多選清單 */
     .checkbox-group { display: flex; gap: 12px; flex-wrap: wrap; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: #fafafa; }
     .checkbox-item { display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
-    .checkbox-item input { width: auto; cursor: pointer; }
 
-    /* 狀態燈號樣式 */
-    .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
-    .dot-blue { background: #3498db; }
-    .dot-green { background: #2ecc71; }
-    .dot-grey { background: #95a5a6; }
-    .dot-red { background: #e74c3c; }
+    /* 馬卡龍色系狀態燈號 */
+    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+    .dot-blue { background: #AEC6CF; }  /* 馬卡龍藍 */
+    .dot-green { background: #B2E2A2; } /* 馬卡龍綠 */
+    .dot-grey { background: #D3D3D3; }  /* 馬卡龍灰 */
+    .dot-red { background: #FFB7B2; }   /* 馬卡龍粉紅 */
   </style>
 </head>
 <body>
@@ -61,13 +60,13 @@
       <h2 style="margin-top:0; font-size: 24px;">新建專案</h2>
       <div class="form-grid">
         <div class="form-group full"><label>專案名稱<span>TITLE</span></label><input id="pTitle" placeholder="如：2026 春季 iPhone 電池更換特惠"></div>
-        <div class="form-group"><label>年度<span>YEAR</span></label><input type="number" id="pYear" value="2026"></div>
+        <div class="form-group"><label>專案年度<span>YEAR</span></label><input type="number" id="pYear" value="2026"></div>
         <div class="form-group"><label>主打項目<span>PRODUCT</span></label><input id="pProduct" placeholder="電池更換/資料救援..."></div>
         <div class="form-group"><label>行銷主題<span>THEME</span></label><input id="pTheme" placeholder="春天/沙灘/中秋..."></div>
         
         <div class="form-group full">
           <label>投放平台<span>PLATFORMS</span></label>
-          <div class="checkbox-group" id="pPlatformsGroup">
+          <div class="checkbox-group">
             <label class="checkbox-item"><input type="checkbox" name="platform" value="META"> META</label>
             <label class="checkbox-item"><input type="checkbox" name="platform" value="GOOGLE"> GOOGLE</label>
             <label class="checkbox-item"><input type="checkbox" name="platform" value="LINE"> LINE</label>
@@ -77,7 +76,7 @@
 
         <div class="form-group full">
           <label>執行門市<span>STORE</span></label>
-          <div class="checkbox-group" id="pStoreGroup">
+          <div class="checkbox-group">
             <label class="checkbox-item"><input type="checkbox" name="store" value="勤美公益店"> 勤美公益店</label>
             <label class="checkbox-item"><input type="checkbox" name="store" value="沙鹿站前店"> 沙鹿站前店</label>
           </div>
@@ -87,10 +86,10 @@
         <div class="form-group">
           <label>專案狀態<span>STATUS</span></label>
           <select id="pStatus">
-            <option value="規劃中">🔵 規劃中</option>
-            <option value="投放中">🟢 投放中</option>
-            <option value="調整中">🔴 調整中</option>
-            <option value="結案">⚪ 結案</option>
+            <option value="規劃中">規劃中</option>
+            <option value="投放中">投放中</option>
+            <option value="調整中">調整中</option>
+            <option value="結案">結案</option>
           </select>
         </div>
         <div class="form-group"><label>開始日期<span>START_DATE</span></label><input type="date" id="pStart"></div>
@@ -145,10 +144,7 @@
 
       document.getElementById('btnConfirm').onclick = async () => {
         const btn = document.getElementById('btnConfirm');
-        
-        // 取得多選平台的資料
         const platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked')).map(i => i.value).join(', ');
-        // 取得多選門市的資料
         const stores = Array.from(document.querySelectorAll('input[name="store"]:checked')).map(i => i.value).join(', ');
 
         const projectData = {
@@ -159,7 +155,7 @@
           platforms: platforms,
           store: stores,
           objective: document.getElementById('pObjective').value,
-          status: document.getElementById('pStatus').value.replace(/[🔵🟢🔴⚪]\s/, ""), // 移除 Emoji 存入資料庫
+          status: document.getElementById('pStatus').value,
           start_date: document.getElementById('pStart').value || null,
           end_date: document.getElementById('pEnd').value || null,
           notes: document.getElementById('pNotes').value
