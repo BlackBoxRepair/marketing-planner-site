@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>黑盒子｜行銷廣告專案</title>
+  <title>黑盒子｜行銷廣告專案管理</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root { --brand: #AE8E53; --bg: #F6F5F2; --paper: #fff; --line: rgba(21,21,21,.10); --r: 20px; }
@@ -13,21 +13,28 @@
     h1 { margin: 0; font-size: 20px; font-weight: 900; }
     .btn { border: 1px solid var(--line); background: #fff; padding: 10px 18px; border-radius: 999px; font-weight: 900; cursor: pointer; transition: 0.2s; font-size: 14px; }
     .btn.primary { background: var(--brand); color: #fff; border-color: var(--brand); }
-    main { max-width: 1000px; margin: 0 auto; padding: 20px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-    .card { background: #fff; padding: 20px; border-radius: var(--r); border: 1px solid var(--line); cursor: pointer; }
+    main { max-width: 1100px; margin: 0 auto; padding: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    .card { background: #fff; padding: 20px; border-radius: var(--r); border: 1px solid var(--line); cursor: pointer; transition: 0.2s; }
+    .card:hover { border-color: var(--brand); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
     .hidden { display: none !important; }
-    .modal { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; padding: 16px; }
-    .modal-content { background: #fff; width: 100%; max-width: 500px; border-radius: var(--r); padding: 24px; }
-    .form-group { margin-bottom: 12px; }
-    label { display: block; font-size: 12px; font-weight: 900; color: #888; margin-bottom: 4px; }
-    input, select { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--line); outline: none; }
+    
+    /* 彈窗優化 */
+    .modal { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px); }
+    .modal-content { background: #fff; width: 100%; max-width: 700px; border-radius: var(--r); padding: 30px; box-shadow: 0 25px 50px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+    .full { grid-column: 1 / -1; }
+    .form-group { margin-bottom: 4px; }
+    label { display: block; font-size: 12px; font-weight: 900; color: #888; margin-bottom: 6px; }
+    input, select, textarea { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--line); outline: none; background: #fafafa; transition: 0.2s; font-size: 14px; }
+    input:focus, select:focus { border-color: var(--brand); background: #fff; }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>行銷廣告專案</h1>
+    <h1>黑盒子行銷計畫系統</h1>
     <div id="nav">
       <button id="btnOpenAdd" class="btn primary">＋ 新增專案</button>
       <button id="btnBack" class="btn hidden">← 回列表</button>
@@ -37,83 +44,101 @@
   <main>
     <div id="listPage" class="grid">載入中...</div>
     <div id="detailPage" class="hidden" style="background:#fff; padding:24px; border-radius:var(--r); border:1px solid var(--line);">
-      <h2 id="detTitle" style="margin-top:0"></h2>
-      <div id="detContent"></div>
-      <div style="margin-top:20px; display:flex; gap:10px;">
-        <button id="btnSave" class="btn primary">儲存</button>
-        <button id="btnDel" class="btn" style="color:red">刪除</button>
       </div>
-    </div>
   </main>
 
   <div id="addModal" class="modal hidden">
     <div class="modal-content">
-      <h2 style="margin-top:0">新增專案</h2>
-      <div class="form-group"><label>標題</label><input id="pTitle"></div>
-      <div class="form-group"><label>門市</label><select id="pStore"><option>勤美公益店</option><option>沙鹿站前店</option></select></div>
-      <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
+      <h2 style="margin-top:0; font-size: 24px;">建立全新維修專案</h2>
+      <div class="form-grid">
+        <div class="form-group full"><label>專案名稱 (TITLE)</label><input id="pTitle" placeholder="如：2026 春季 iPhone 電池更換特惠"></div>
+        <div class="form-group"><label>年度 (YEAR)</label><input type="number" id="pYear" value="2026"></div>
+        <div class="form-group"><label>維修品項 (PRODUCT)</label><input id="pProduct" placeholder="電池更換/資料救援..."></div>
+        <div class="form-group"><label>行銷主題 (THEME)</label><input id="pTheme" placeholder="春天/沙灘/中秋..."></div>
+        <div class="form-group"><label>投放平台 (PLATFORMS)</label><input id="pPlatforms" placeholder="META, GOOGLE"></div>
+        <div class="form-group"><label>執行門市 (STORE)</label><select id="pStore"><option value="勤美公益店">勤美公益店</option><option value="沙鹿站前店">沙鹿站前店</option><option value="全門市">全門市</option></select></div>
+        <div class="form-group"><label>行銷目標 (OBJECTIVE)</label><input id="pObjective" placeholder="MSG/LEAD/CALL"></div>
+        <div class="form-group"><label>專案狀態 (STATUS)</label><select id="pStatus"><option value="規劃中">規劃中</option><option value="投放中">投放中</option><option value="結案">結案</option></select></div>
+        <div class="form-group"><label>開始日期 (START_DATE)</label><input type="date" id="pStart"></div>
+        <div class="form-group"><label>結束日期 (END_DATE)</label><input type="date" id="pEnd"></div>
+        <div class="form-group full"><label>專案備註 (NOTES)</label><textarea id="pNotes" rows="2"></textarea></div>
+      </div>
+      <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:24px;">
         <button id="btnCancel" class="btn">取消</button>
-        <button id="btnConfirm" class="btn primary">確認建立</button>
+        <button id="btnConfirm" class="btn primary">確認建立專案</button>
       </div>
     </div>
   </div>
 
   <script>
-    // 關鍵修正：移除所有重複宣告，只在最頂層定義一次
     (function() {
       const URL = "https://udycidkswyqasnzwlmqv.supabase.co";
       const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkeWNpZGtzd3lxYXNuendsbXF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODYzNzUsImV4cCI6MjA4ODI2MjM3NX0.Gu68eely_7xJrRBAuevEXzPt93Hnzr1fVwnz3SSp3pk";
       const client = window.supabase.createClient(URL, KEY);
 
       const listPage = document.getElementById('listPage');
-      const detailPage = document.getElementById('detailPage');
       const addModal = document.getElementById('addModal');
-      const btnBack = document.getElementById('btnBack');
       const btnOpenAdd = document.getElementById('btnOpenAdd');
 
       async function fetchAll() {
-        listPage.innerHTML = '讀取中...';
+        listPage.innerHTML = '正在讀取行銷看板...';
         const { data, error } = await client.from('projects').select('*').order('created_at', { ascending: false });
         if (error) { listPage.innerHTML = '讀取失敗'; return; }
         listPage.innerHTML = data.map(p => `
-          <div class="card" onclick="window.viewDetail('${p.id}')">
-            <div style="font-weight:900;">${p.title}</div>
-            <div style="font-size:12px; color:#888;">${p.year || 2026} | ${p.store || ''}</div>
+          <div class="card" onclick="alert('專案 ID: ${p.id}\\n目前功能：新增完成！')">
+            <div style="font-weight:900; font-size:18px; margin-bottom:8px;">${p.title}</div>
+            <div style="font-size:12px; color:#888;">
+              📍 ${p.store} | 🛠️ ${p.product || '未設定'}<br>
+              📅 ${p.start_date || '-'} ~ ${p.end_date || '-'}<br>
+              <span style="display:inline-block; margin-top:8px; padding:2px 8px; border-radius:4px; background:#f0f0f0; color:var(--brand); font-weight:bold;">${p.status}</span>
+            </div>
           </div>
         `).join('') || '目前沒有專案';
       }
 
-      window.viewDetail = async function(id) {
-        listPage.classList.add('hidden');
-        btnOpenAdd.classList.add('hidden');
-        detailPage.classList.remove('hidden');
-        btnBack.classList.remove('hidden');
-        const { data } = await client.from('projects').select('*').eq('id', id).single();
-        if (data) {
-          document.getElementById('detTitle').innerText = data.title;
-          document.getElementById('detContent').innerHTML = `
-            <div class="form-group"><label>編輯標題</label><input id="edTitle" value="${data.title}"></div>
-            <div class="form-group"><label>備註</label><textarea id="edNotes" style="width:100%; padding:10px; border-radius:10px; border:1px solid #ddd;">${data.notes || ''}</textarea></div>
-          `;
-          document.getElementById('btnSave').onclick = async () => {
-            await client.from('projects').update({ title: document.getElementById('edTitle').value, notes: document.getElementById('edNotes').value }).eq('id', id);
-            alert('已儲存');
-          };
-          document.getElementById('btnDel').onclick = async () => {
-            if(confirm('確定刪除？')) { await client.from('projects').delete().eq('id', id); location.reload(); }
-          };
-        }
-      };
-
+      // 按鈕控制
       btnOpenAdd.onclick = () => addModal.classList.remove('hidden');
       document.getElementById('btnCancel').onclick = () => addModal.classList.add('hidden');
-      btnBack.onclick = () => location.reload();
 
+      // 對照資料庫對應項目的儲存邏輯
       document.getElementById('btnConfirm').onclick = async () => {
-        const t = document.getElementById('pTitle').value;
-        if(!t) return;
-        await client.from('projects').insert([{ title: t, year: 2026, store: document.getElementById('pStore').value }]);
-        location.reload();
+        const btn = document.getElementById('btnConfirm');
+        btn.disabled = true;
+        btn.innerText = '正在寫入資料庫...';
+
+        const projectData = {
+          title: document.getElementById('pTitle').value,
+          year: parseInt(document.getElementById('pYear').value),
+          product: document.getElementById('pProduct').value,
+          theme: document.getElementById('pTheme').value,
+          platforms: document.getElementById('pPlatforms').value,
+          store: document.getElementById('pStore').value,
+          objective: document.getElementById('pObjective').value,
+          status: document.getElementById('pStatus').value,
+          start_date: document.getElementById('pStart').value || null,
+          end_date: document.getElementById('pEnd').value || null,
+          notes: document.getElementById('pNotes').value
+        };
+
+        if(!projectData.title) {
+          alert('專案名稱必填！');
+          btn.disabled = false;
+          btn.innerText = '確認建立專案';
+          return;
+        }
+
+        const { error } = await client.from('projects').insert([projectData]);
+        
+        if (error) {
+          alert('儲存失敗：' + error.message);
+        } else {
+          addModal.classList.add('hidden');
+          // 清空表單
+          document.querySelectorAll('#addModal input, #addModal textarea').forEach(i => i.value = '');
+          fetchAll();
+        }
+        btn.disabled = false;
+        btn.innerText = '確認建立專案';
       };
 
       fetchAll();
