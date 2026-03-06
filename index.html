@@ -29,17 +29,17 @@
     label span { font-size: 10px; color: #aaa; font-weight: normal; margin-left: 4px; text-transform: uppercase; }
     input, select, textarea { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--line); outline: none; background: #fafafa; font-size: 14px; }
     
-    /* 多選清單優化：解決擠壓問題 */
-    .checkbox-group { display: flex; gap: 16px; flex-wrap: wrap; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: #fafafa; }
-    .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; white-space: nowrap; } /* 防止文字換行 */
+    /* 多選清單優化 */
+    .checkbox-group { display: flex; gap: 20px; flex-wrap: wrap; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: #fafafa; }
+    .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
     .checkbox-item input { width: 18px; height: 18px; cursor: pointer; margin: 0; }
 
-    /* 卡片上的狀態燈號 */
+    /* 卡片上的自定義圓點樣式 */
     .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
-    .dot-blue { background: #AEC6CF; }  /* 馬卡龍藍 - 規劃中 */
-    .dot-green { background: #B2E2A2; } /* 馬卡龍綠 - 投放中 */
-    .dot-red { background: #FFB7B2; }   /* 馬卡龍粉紅 - 調整中 */
-    .dot-grey { background: #D3D3D3; }  /* 馬卡龍灰 - 結案 */
+    .dot-blue { background: #AEC6CF; }  /* 馬卡龍藍 */
+    .dot-green { background: #B2E2A2; } /* 馬卡龍綠 */
+    .dot-red { background: #FFB7B2; }   /* 馬卡龍粉 */
+    .dot-grey { background: #D3D3D3; }  /* 馬卡龍灰 */
   </style>
 </head>
 <body>
@@ -87,10 +87,10 @@
         <div class="form-group">
           <label>專案狀態<span>STATUS</span></label>
           <select id="pStatus">
-            <option value="規劃中">● 規劃中 (粉藍)</option>
-            <option value="投放中">● 投放中 (粉綠)</option>
-            <option value="調整中">● 調整中 (粉紅)</option>
-            <option value="結案">● 結案 (淺灰)</option>
+            <option value="規劃中">🔵 規劃中</option>
+            <option value="投放中">🟢 投放中</option>
+            <option value="調整中">🔴 調整中</option>
+            <option value="結案">⚪ 結案</option>
           </select>
         </div>
         <div class="form-group"><label>開始日期<span>START_DATE</span></label><input type="date" id="pStart"></div>
@@ -121,9 +121,11 @@
         
         listPage.innerHTML = data.map(p => {
           let dotClass = 'dot-grey';
-          if(p.status.includes('規劃中')) dotClass = 'dot-blue';
-          if(p.status.includes('投放中')) dotClass = 'dot-green';
-          if(p.status.includes('調整中')) dotClass = 'dot-red';
+          // 移除可能存在的標記字元後判斷狀態
+          const status = p.status.replace(/[🔵🟢🔴⚪]\s/, "");
+          if(status === '規劃中') dotClass = 'dot-blue';
+          if(status === '投放中') dotClass = 'dot-green';
+          if(status === '調整中') dotClass = 'dot-red';
 
           return `
           <div class="card" onclick="alert('專案 ID: ${p.id}')">
@@ -133,7 +135,7 @@
               📅 ${p.start_date || '-'} ~ ${p.end_date || '-'}<br>
               <div style="margin-top:8px; display:flex; align-items:center;">
                 <span class="status-dot ${dotClass}"></span>
-                <span style="font-weight:bold; color:#555;">${p.status.replace(/●\s/, "").split(' (')[0]}</span>
+                <span style="font-weight:bold; color:#555;">${status}</span>
               </div>
             </div>
           </div>
@@ -149,7 +151,7 @@
         const stores = Array.from(document.querySelectorAll('input[name="store"]:checked')).map(i => i.value).join(', ');
 
         const rawStatus = document.getElementById('pStatus').value;
-        const cleanStatus = rawStatus.replace(/●\s/, "").split(' (')[0];
+        const cleanStatus = rawStatus.replace(/[🔵🟢🔴⚪]\s/, "");
 
         const projectData = {
           title: document.getElementById('pTitle').value,
